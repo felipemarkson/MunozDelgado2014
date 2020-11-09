@@ -1,6 +1,6 @@
 include("SystemData.jl")
 
-# Conjuntos de indices e tipos
+# Sets of indexes
 B = Vector(1:length(SystemData.load_factor))
 
 T = Vector(1:size(SystemData.peak_demand)[2])
@@ -11,7 +11,7 @@ P = ["C", "W"]
 
 TR = ["ET", "NT"]
 
-# Conjuntos de Alternativas
+# Sets of alternatives
 
 Kˡ = Dict("EFF" => [1], "ERF" => [1], "NRF" => [1, 2], "NAF" => [1, 2])
 
@@ -19,7 +19,7 @@ Kᵖ = Dict("C" => [1, 2], "W" => [1, 2])
 
 Kᵗʳ = Dict("ET" => [1], "NT" => [1, 2])
 
-# Conjuntos de ramos
+# Sets of branches
 γˡ = Dict("EFF" => [], "ERF" => [], "NRF" => [], "NAF" => [])
 
 for branch_type in L
@@ -34,10 +34,10 @@ end
 γˡ["NRF"] = γˡ["ERF"]
 
 
-# Conjuntos de barras
+# Sets of nodes
 Ωˢˢ = [21, 22, 24, 23]
-Ωˢˢᴱ = [21, 22] # Adicionado
-Ωˢˢᴺ = [23, 24] # Adicionado
+Ωˢˢᴱ = [21, 22] # Fixing eq14
+Ωˢˢᴺ = [23, 24] # Fixing eq14
 
 Ωˡₛ = Dict(
     "EFF" => [[] for i = 1:SystemData.n_bus],
