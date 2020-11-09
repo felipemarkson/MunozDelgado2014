@@ -1,14 +1,14 @@
 include("sets.jl")
 include("wind.jl")
 
-#Custos de energia
+#Energy Costs
 Cᴱᵖₖ = Dict("C" => [47, 45], "W" => [0, 0])
 
 Cˢˢᵦ = [57.7, 70, 85.3]
 
 Cᵁ = 2000
 
-#Custos de investimentos
+#Investment Costs
 Cᴵˡₖ = Dict("NRF" => [19140, 29870], "NAF" => [15020, 25030])
 
 Cᴵᴺᵀₖ = [750e3, 950e3]
@@ -17,7 +17,7 @@ Cᴵᵖₖ = Dict("C" => [500e3, 490e3], "W" => [1850e3, 1840e3])
 
 Cᴵˢˢₛ = Dict(21 => 100e3, 22 => 100e3, 23 => 140e3, 24 => 180e3)
 
-#Custos de manutenção
+#Maintenance Costs
 Cᴹˡₖ = Dict(
     "EFF" => [450],
     "ERF" => [450],
@@ -36,7 +36,7 @@ Cᴹᵗʳₖ = Dict( #0.05*Cᴵᵖₖ*Gᵖₖ
     "NT" => [2000, 3000],
 )
 
-# Dados do sistema
+# System's Data
 
 Dₛₜ = SystemData.peak_demand
 
@@ -104,9 +104,9 @@ nT = length(T)
 
 pf = 0.9
 
-H = V̅ - V_  #Informação retirada de Munoz-Delgado et.al 2018
+H = V̅ - V_  #Ref: DOI: 10.1109/TPWRS.2017.2764331
 
-# Dados dos ativos
+# Assets Data
 i = 7.1/100
 
 IBₜ = [6e6, 6e6, 6e6]
@@ -158,7 +158,7 @@ Zᵗʳₖ = Dict(
 ℇ = 0.25
 
 
-# Dados da linearização por partes
+# Piecewise linearization
 
 nᵨ = 3
 
@@ -179,7 +179,7 @@ Aˡₖᵨ = Dict(
 for l in L
     for k in Kˡ[l]
         for p in 1:nᵨ
-            push!(Mˡₖᵨ[l][k], (2*p - 1)*Zˡₖ[l][k]*F̅ˡₖ[l][k]/nᵨ)
+            push!(Mˡₖᵨ[l][k], (2*p - 1)*Zˡₖ[l][k]*F̅ˡₖ[l][k]/(nᵨ*(Vbase^2)))
             push!(Aˡₖᵨ[l][k], F̅ˡₖ[l][k]/nᵨ)
         end
     end
@@ -199,7 +199,7 @@ Aᵗʳₖᵨ = Dict(
 for tr in TR
     for k in Kᵗʳ[tr]
         for p in 1:nᵨ
-            push!(Mᵗʳₖᵨ[tr][k], (2*p - 1)*Zᵗʳₖ[tr][k]*G̅ᵗʳₖ[tr][k]/nᵨ)
+            push!(Mᵗʳₖᵨ[tr][k], (2*p - 1)*Zᵗʳₖ[tr][k]*G̅ᵗʳₖ[tr][k]/(nᵨ*(Vˢˢ^2)))
             push!(Aᵗʳₖᵨ[tr][k], G̅ᵗʳₖ[tr][k]/nᵨ)
         end
     end

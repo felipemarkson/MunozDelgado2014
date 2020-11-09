@@ -1,7 +1,7 @@
 module SystemData
     n_bus = 24
     n_branches = 33
-    
+
     load_factor = [0.7, 0.83, 1]
 
     branch = [
@@ -63,6 +63,10 @@ module SystemData
         0.00 0.00 2.10
         0.00 0.00 1.81
         0.00 0.00 3.79
+        0.00 0.00 0.00 #add eq14 problem
+        0.00 0.00 0.00 #add eq14 problem
+        0.00 0.00 0.00 #add eq14 problem
+        0.00 0.00 0.00 #add eq14 problem
     ]
 
     node_zone = [2, 3, 3, 1, 1, 2, 3, 3, 1, 2, 3, 3, 3, 2, 2, 2, 3, 1, 3, 1, 3, 3, 3, 1]
