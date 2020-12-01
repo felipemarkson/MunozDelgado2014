@@ -63,21 +63,37 @@ F̅ˡₖ = Dict(
 G̅ᵖₖ = Dict("C" => [1, 2], "W" => [0.91, 2.05])
 
 Ĝᵂₛₖₜᵦ = zeros(length(Ωᴺ), length(Kᵖ["W"]), length(T), length(B))
+# begin
+#     # Ref: https://wind-turbine.com/download/101655/enercon_produkt_en_06_2015.pdf
+#     wᵢ = [4.0, 3.0]
+#     Pᵢ = [0.02, 0.025]
+#     wᵣ = [15, 12]
+#     Pᵣ = G̅ᵖₖ["W"]
+#
+#     for s = Ωᴺ
+#         for k in Kᵖ["W"]
+#             for t in T
+#                 for b in B
+#                     zone = SystemData.node_zone[s]
+#                     speed = SystemData.wind_speed[zone, b]
+#                     Ĝᵂₛₖₜᵦ[s, k, t, b] =
+#                         power_out(wᵢ[k], wᵣ[k], Pᵢ[k], Pᵣ[k], speed)
+#                 end
+#             end
+#         end
+#     end
+# end
+
+# Version 2
 begin
     # Ref: https://wind-turbine.com/download/101655/enercon_produkt_en_06_2015.pdf
-    wᵢ = [4.0, 3.0]
-    Pᵢ = [0.02, 0.025]
-    wᵣ = [15, 12]
-    Pᵣ = G̅ᵖₖ["W"]
-
     for s = Ωᴺ
         for k in Kᵖ["W"]
             for t in T
                 for b in B
                     zone = SystemData.node_zone[s]
                     speed = SystemData.wind_speed[zone, b]
-                    Ĝᵂₛₖₜᵦ[s, k, t, b] =
-                        power_out(wᵢ[k], wᵣ[k], Pᵢ[k], Pᵣ[k], speed)
+                    Ĝᵂₛₖₜᵦ[s, k, t, b] = power_out_v2(k, speed)
                 end
             end
         end
