@@ -1,5 +1,6 @@
 import JuMP
 import CPLEX
+using Crayons
 
 function println_lista(lista)
     print("[")
@@ -411,6 +412,17 @@ for t in T
         end
     end
 
+    println("       NEW GENERATOR:")
+    for p in P
+        for s in Ωᵖ[p]
+            for k in Kᵖ[p]
+                if JuMP.value(xᵖₛₖₜ[p,s,k,t]) > 0.1
+                    println("           Node: ", s, " Type: ", p ," Alternative: ", k)
+                end
+            end
+        end
+    end
+
     println("       LINES:")
     for l in ["NRF", "NAF"]
         for s in Ωᴺ
@@ -438,32 +450,62 @@ for t in T
         for s in Ωᴺ
             for k in Kᵗʳ[tr]
                 data = [JuMP.value(gᵗʳₛₖₜᵦ[tr,s,k,t,b]) for b in B]
-                usetr = JuMP.value(yᵗʳₛₖₜ[tr,s,k,t])
-                if usetr > 0.1
-                    println("           Type:", tr," Node:", s," Alternative: ", k )
-                end
-                if any(value -> value > 0 ,data)
-                    println("               Injection: ", round(JuMP.value(gᵗʳₛₖₜᵦ[tr,s,k,t,3]), digits=2), " Type:", tr," Node:", s," Alternative: ", k )
+                usetr = JuMP.value(yᵗʳₛₖₜ[tr,s,k,t]) > 0
+                has_flow = any(value -> value > 0 ,data)
+                if !(!usetr &&  has_flow)
+                    if usetr
+                        println("           Type:", tr," Node:", s," Alternative: ", k )
+                        println("               Injection: ", round(JuMP.value(gᵗʳₛₖₜᵦ[tr,s,k,t,3]), digits=2), " Type:", tr," Node:", s," Alternative: ", k )
+                    end
+                else
+                    println(crayon"red","ERROR!!!!!!    Type:", tr," Node:", s," Alternative: ", k )
                 end
             end
         end
     end
+
+    println("       GENERATORS:")
+    for p in P
+        for s in Ωᵖ[p]
+            for k in Kᵖ[p]
+                data = [JuMP.value(gᵖₛₖₜᵦ[p,s,k,t,b]) for b in B]
+                usegd = JuMP.value(yᵖₛₖₜ[p,s,k,t]) > 0.1
+                has_flow = any(value -> value > 0 ,data)
+                if !(!usegd &&  has_flow)
+                    if usegd
+                        println("           Type:", p," Node:", s," Alternative: ", k )
+                        println("               Injection: ", round(JuMP.value(gᵖₛₖₜᵦ[p,s,k,t,3]), digits=2), " Type:", p," Node:", s," Alternative: ", k )
+                    end
+                else
+                    println(crayon"red", "ERROR!!!!!!    Type:", p," Node:", s," Alternative: ", k )
+                end
+            end
+        end
+    end
+
     println("       LINES:")
     for l in L
         for s in Ωᴺ
             for r in Ωˡₛ[l][s]
                 for k in Kˡ[l]
-                    use_line = JuMP.value(yˡₛᵣₖₜ[l,s,r,k,t])
-                    if use_line > 0.1
-                        println("           Type ", l, "Branch: ", (s, r), " Alternative: ", k)
-                    end
+                    use_line = JuMP.value(yˡₛᵣₖₜ[l,s,r,k,t]) > 0.1
                     data1 = [JuMP.value(fˡₛᵣₖₜᵦ[l,s,r,k,t,b]) for b in B]
                     data2 = [JuMP.value(fˡₛᵣₖₜᵦ[l,r,s,k,t,b]) for b in B]
-                    if any(value -> value > 0 ,data1)
-                        println("             Flow", (s, r),": ", round(JuMP.value(fˡₛᵣₖₜᵦ[l,s,r,k,t,3]), digits=2))
-                    end
-                    if any(value -> value > 0 ,data2)
-                        println("             Flow", (s, r),": ", round(JuMP.value(fˡₛᵣₖₜᵦ[l,r,s,k,t,3]), digits=2))
+                    has_flow_sr = any(value -> value > 0 ,data1)
+                    has_flow_rs = any(value -> value > 0 ,data1)
+                    has_flow = has_flow_sr || has_flow_rs
+
+                    if !(!use_line &&  has_flow)
+                        if use_line
+                            println("           Type ", l, "Branch: ", (s, r), " Alternative: ", k)
+                            if has_flow_sr
+                                println("             Flow", (s, r),": ", round(JuMP.value(fˡₛᵣₖₜᵦ[l,s,r,k,t,3]), digits=2))
+                            else
+                                println("             Flow", (s, r),": ", round(JuMP.value(fˡₛᵣₖₜᵦ[l,r,s,k,t,3]), digits=2))
+                            end
+                        end
+                    else
+                        println(crayon"red", "ERROR!!!!!!Type ", l, "Branch: ", (s, r), " Alternative: ", k)
                     end
                 end
             end
