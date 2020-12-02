@@ -6,16 +6,16 @@ Cᴱᵖₖ = Dict("C" => [47, 45], "W" => [0, 0])
 
 Cˢˢᵦ = [57.7, 70, 85.3]
 
-Cᵁ = 20000 # This value was changed because 1% gap can present unserved energy
+Cᵁ = 20000 # This value was changed because 1% gap can present unserved energ
 
 #Investment Costs
-Cᴵˡₖ = Dict("NRF" => [19140, 29870], "NAF" => [15020, 25030])
+Cᴵˡₖ = Dict("NRF" => [29870, 39310], "NAF" => [25030, 34920])
 
-Cᴵᴺᵀₖ = [750e3, 950e3]
+Cᴵᴺᵀₖ = [500e3, 950e3]
 
 Cᴵᵖₖ = Dict("C" => [500e3, 490e3], "W" => [1850e3, 1840e3])
 
-Cᴵˢˢₛ = Dict(21 => 100e3, 22 => 100e3, 23 => 140e3, 24 => 180e3)
+Cᴵˢˢₛ = Dict(136 => 100e3, 137 => 100e3, 138 => 150e3)
 
 #Maintenance Costs
 Cᴹˡₖ = Dict(
@@ -32,8 +32,8 @@ Cᴹᵖₖ = Dict( #0.05*Cᴵᵖₖ*Gᵖₖ
 
 
 Cᴹᵗʳₖ = Dict( #0.05*Cᴵᵖₖ*Gᵖₖ
-    "ET" => [1000],
-    "NT" => [2000, 3000],
+    "ET" => [2000],
+    "NT" => [1000, 3000],
 )
 
 # System's Data
@@ -54,10 +54,10 @@ for s in Ωᴺ
 end
 
 F̅ˡₖ = Dict(
-    "EFF" => [3.94],
-    "ERF" => [3.94],
-    "NRF" => [6.28, 9],
-    "NAF" => [3.94, 6.28],
+    "EFF" => [6.28],
+    "ERF" => [6.28],
+    "NRF" => [9, 12],
+    "NAF" => [6.28, 9],
 )
 
 G̅ᵖₖ = Dict("C" => [1, 2], "W" => [0.91, 2.05])
@@ -100,9 +100,9 @@ begin
     end
 end
 
-G̅ᵗʳₖ = Dict("ET" => [7.5], "NT" => [12, 15])
+G̅ᵗʳₖ = Dict("ET" => [12], "NT" => [7.5, 15])
 
-Vbase = 20 #kV
+Vbase = 13.8 #kV
 V_ = 0.95*Vbase
 V̅ = 1.05*Vbase
 Vˢˢ = 1.05*Vbase
@@ -125,7 +125,7 @@ H = V̅ - V_  #Ref: DOI: 10.1109/TPWRS.2017.2764331
 # Assets Data
 i = 7.1/100
 
-IBₜ = [6e6 for t in T]
+IBₜ = [5e6 for t in T]
 
 ηˡ = Dict(
     "NRF" => 25,
@@ -156,15 +156,15 @@ RRᵖ =  Dict(
 RRˢˢ = i
 
 Zˡₖ = Dict(
-    "EFF" => [0.732],
-    "ERF" => [0.732],
-    "NRF" => [0.557, 0.478],
-    "NAF" => [0.732, 0.557]
+    "EFF" => [0.557],
+    "ERF" => [0.557],
+    "NRF" => [0.478, 0.423],
+    "NAF" => [0.557, 0.478]
 )
 
 Zᵗʳₖ = Dict(
-    "ET" => [0.25],
-    "NT" => [0.16, 0.13]
+    "ET" => [0.16],
+    "NT" => [0.25, 0.13]
 )
 
 Δᵦ = [2000, 5760, 1000]

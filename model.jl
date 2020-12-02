@@ -153,6 +153,9 @@ JuMP.@constraint(model, eq6[t=T], cᵁₜ[t] ==
 JuMP.@constraint(model, eq7[s=Ωᴺ,t=T,b=B],
     V_ <= vₛₜᵦ[s,t,b] <= V̅
 )
+JuMP.@constraint(model, eq7_aux[s=Ωˢˢ,t=T,b=B],
+    vₛₜᵦ[s,t,b] == Vˢˢ
+)
 
 JuMP.@constraint(model, eq8[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B],
     fˡₛᵣₖₜᵦ[l,s,r,k,t,b] <= yˡₛᵣₖₜ[l,s,r,k,t]*F̅ˡₖ[l][k]
@@ -372,12 +375,13 @@ JuMP.optimize!(model)
 if JuMP.termination_status(model) != JuMP.MOI.OPTIMAL
     error("Not Optimal")
 end
-fobj = round(JuMP.objective_value(model)/1e6, digits=2)
-invest = round.(JuMP.value.(cᴵₜ)/1e6, digits=2)
-manu = round.(JuMP.value.(cᴹₜ)/1e6, digits=2)
-prod = round.(JuMP.value.(cᴱₜ)/1e6, digits=2)
-loss = round.(JuMP.value.(cᴿₜ)/1e6, digits=2)
-unserv = round.(JuMP.value.(cᵁₜ)/1e6, digits=2)
+
+fobj = round(JuMP.value.(cᵀᴾⱽ)/1e6, digits=3)
+invest = round.(JuMP.value.(cᴵₜ)/1e6, digits=3)
+manu = round.(JuMP.value.(cᴹₜ)/1e6, digits=3)
+prod = round.(JuMP.value.(cᴱₜ)/1e6, digits=3)
+loss = round.(JuMP.value.(cᴿₜ)/1e6, digits=3)
+unserv = round.(JuMP.value.(cᵁₜ)/1e6, digits=3)
 println()
 println("Fobj: ", fobj)
 print("Investiment Costs: ")
@@ -451,7 +455,7 @@ for t in T
             for k in Kᵗʳ[tr]
                 data = [JuMP.value(gᵗʳₛₖₜᵦ[tr,s,k,t,b]) for b in B]
                 usetr = JuMP.value(yᵗʳₛₖₜ[tr,s,k,t]) > 0
-                has_flow = any(value -> value > 0 ,data)
+                has_flow = any(value -> value > 0.01, data)
                 if !(!usetr &&  has_flow)
                     if usetr
                         println("           Type:", tr," Node:", s," Alternative: ", k )
@@ -470,7 +474,7 @@ for t in T
             for k in Kᵖ[p]
                 data = [JuMP.value(gᵖₛₖₜᵦ[p,s,k,t,b]) for b in B]
                 usegd = JuMP.value(yᵖₛₖₜ[p,s,k,t]) > 0.1
-                has_flow = any(value -> value > 0 ,data)
+                has_flow = any(value -> value > 0.01, data)
                 if !(!usegd &&  has_flow)
                     if usegd
                         println("           Type:", p," Node:", s," Alternative: ", k )
@@ -491,8 +495,8 @@ for t in T
                     use_line = JuMP.value(yˡₛᵣₖₜ[l,s,r,k,t]) > 0.1
                     data1 = [JuMP.value(fˡₛᵣₖₜᵦ[l,s,r,k,t,b]) for b in B]
                     data2 = [JuMP.value(fˡₛᵣₖₜᵦ[l,r,s,k,t,b]) for b in B]
-                    has_flow_sr = any(value -> value > 0 ,data1)
-                    has_flow_rs = any(value -> value > 0 ,data1)
+                    has_flow_sr = any(value -> value > 0.01, data1)
+                    has_flow_rs = any(value -> value > 0.01, data1)
                     has_flow = has_flow_sr || has_flow_rs
 
                     if !(!use_line &&  has_flow)
@@ -506,6 +510,11 @@ for t in T
                         end
                     else
                         println(crayon"red", "ERROR!!!!!!Type ", l, "Branch: ", (s, r), " Alternative: ", k)
+                        if has_flow_sr
+                            println(crayon"red",  round(JuMP.value(fˡₛᵣₖₜᵦ[l,s,r,k,t,1]), digits=2),  round(JuMP.value(fˡₛᵣₖₜᵦ[l,s,r,k,t,2]), digits=2) ,  round(JuMP.value(fˡₛᵣₖₜᵦ[l,s,r,k,t,3]), digits=2))
+                        else
+                            println(crayon"red",  round(JuMP.value(fˡₛᵣₖₜᵦ[l,r,s,k,t,1]), digits=2),  round(JuMP.value(fˡₛᵣₖₜᵦ[l,r,s,k,t,2]), digits=2) ,  round(JuMP.value(fˡₛᵣₖₜᵦ[l,r,s,k,t,3]), digits=2))
+                        end
                     end
                 end
             end
