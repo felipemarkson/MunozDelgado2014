@@ -6,7 +6,7 @@ Cᴱᵖₖ = Dict("C" => [47, 45], "W" => [0, 0])
 
 Cˢˢᵦ = [57.7, 70, 85.3]
 
-Cᵁ = 2000
+Cᵁ = 20000 # This value was changed because 1% gap can present unserved energy
 
 #Investment Costs
 Cᴵˡₖ = Dict("NRF" => [19140, 29870], "NAF" => [15020, 25030])
@@ -125,7 +125,7 @@ H = V̅ - V_  #Ref: DOI: 10.1109/TPWRS.2017.2764331
 # Assets Data
 i = 7.1/100
 
-IBₜ = [6e6, 6e6, 6e6]
+IBₜ = [6e6 for t in T]
 
 ηˡ = Dict(
     "NRF" => 25,

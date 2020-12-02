@@ -53,23 +53,15 @@ for branch_type in L
     end
 end
 
-Ωᴸᴺₜ = Dict(
-    1 => [
-        indx
-        for
-        (indx, value) in enumerate(SystemData.peak_demand[:, 1]) if value > 0
-    ],
-    2 => [
-        indx
-        for
-        (indx, value) in enumerate(SystemData.peak_demand[:, 2]) if value > 0
-    ],
-    3 => [
-        indx
-        for
-        (indx, value) in enumerate(SystemData.peak_demand[:, 3]) if value > 0
-    ],
-)
+Ωᴸᴺₜ = Dict()
+for t in T
+    push!(
+        Ωᴸᴺₜ,
+        t => [
+            indx for (indx, value) in enumerate(SystemData.peak_demand[:, t]) if value > 0
+        ],
+    )
+end
 
 Ωᴺ = Vector(1:SystemData.n_bus)
 
