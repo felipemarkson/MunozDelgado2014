@@ -10,23 +10,23 @@ function println_lista(lista)
     println("]")
 end
 
-include("dados/24bus/main.jl")
+include("dados/138bus/main.jl")
 model = JuMP.Model(CPLEX.Optimizer)
-JuMP.set_optimizer_attribute(model, "CPX_PARAM_EPGAP", 1/100)
+JuMP.set_optimizer_attribute(model, "CPX_PARAM_EPGAP", 0.1/100)
 
 
 #Variables
-JuMP.@variable(model, 0 <= cᴱₜ[T])
-JuMP.@variable(model, 0 <= cᴹₜ[T])
-JuMP.@variable(model, 0 <= cᴿₜ[T])
-JuMP.@variable(model, 0 <= cᵁₜ[T])
-JuMP.@variable(model, 0 <= cᴵₜ[T])
-JuMP.@variable(model, 0 <= cᵀᴾⱽ)
-JuMP.@variable(model, 0 <= dᵁₛₜᵦ[Ωᴺ, T, B])
-JuMP.@variable(model, 0 <= fˡₛᵣₖₜᵦ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T, B])
+# JuMP.@variable(model, 0 <= cᴱₜ[T])
+# JuMP.@variable(model, 0 <= cᴹₜ[T])
+# JuMP.@variable(model, 0 <= cᴿₜ[T])
+# JuMP.@variable(model, 0 <= cᵁₜ[T])
+# JuMP.@variable(model, 0 <= cᴵₜ[T])
+# JuMP.@variable(model, 0 <= cᵀᴾⱽ)
+# JuMP.@variable(model, 0 <= dᵁₛₜᵦ[Ωᴺ, T, B])
+# JuMP.@variable(model, 0 <= fˡₛᵣₖₜᵦ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T, B])
 JuMP.@variable(model, 0 <= f̃ˡₛᵣₖₜᵦ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T, B])
 JuMP.@variable(model, 0 <= gᵖₛₖₜᵦ[p=P, Ωᴺ, Kᵖ[p], T, B])
-JuMP.@variable(model, 0 <= gᵗʳₛₖₜᵦ[tr=TR, Ωᴺ, Kᵗʳ[tr], T, B])
+# JuMP.@variable(model, 0 <= gᵗʳₛₖₜᵦ[tr=TR, Ωᴺ, Kᵗʳ[tr], T, B])
 JuMP.@variable(model, 0 <= g̃ˢˢₛₜᵦ[Ωᴺ, T, B])
 JuMP.@variable(model, 0 <= vₛₜᵦ[Ωᴺ, T, B])
 JuMP.@variable(model, xˡₛᵣₖₜ[l=["NRF", "NAF"], s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T], Bin)
@@ -39,17 +39,9 @@ JuMP.@variable(model, yᵗʳₛₖₜ[tr=TR, Ωᴺ, Kᵗʳ[tr], T], Bin)
 JuMP.@variable(model, 0 <= δˡₛᵣₖₜᵦᵨ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T, B, ρ=1:nᵨ])
 JuMP.@variable(model, 0 <= δᵗʳₛₖₜᵦᵨ[tr=TR, Ωˢˢ, Kᵗʳ[tr], T, B, ρ=1:nᵨ])
 
-#Objective Function
-JuMP.@objective(model, Min, cᵀᴾⱽ)
 
-#Costs Constraints
-JuMP.@constraint(model, eq1, cᵀᴾⱽ ==
-    sum(cᴵₜ[t]*((1+i)^-t)/i for t in T)
-    + sum((cᴹₜ[t] + cᴱₜ[t] + cᴿₜ[t] + cᵁₜ[t]) *(1+i)^-t for t in T)
-    + (cᴹₜ[nT] + cᴱₜ[nT] + cᴿₜ[nT] + cᵁₜ[nT])*((1+ i)^-nT)/i
-)
-
-JuMP.@constraint(model, eq2[t=T], cᴵₜ[t] ==
+## eq2
+JuMP.@expression(model, cᴵₜ[t=T],
     sum(RRˡ[l]*sum(sum(
                 Cᴵˡₖ[l][k]*ℓₛᵣ[s,r]*xˡₛᵣₖₜ[l,s,r,k,t]
             for (s,r) in γˡ[l])
@@ -72,7 +64,8 @@ JuMP.@constraint(model, eq2[t=T], cᴵₜ[t] ==
     for p in P)
 )
 
-JuMP.@constraint(model, eq3[t=T], cᴹₜ[t] ==
+## eq3
+JuMP.@expression(model, cᴹₜ[t=T],
     sum(sum(sum(
                 Cᴹˡₖ[l][k]*(yˡₛᵣₖₜ[l,s,r,k,t] + yˡₛᵣₖₜ[l,r,s,k,t])
             for (s,r) in γˡ[l])
@@ -92,7 +85,35 @@ JuMP.@constraint(model, eq3[t=T], cᴹₜ[t] ==
     for p in P)
 )
 
-JuMP.@constraint(model, eq4[t=T], cᴱₜ[t] ==
+## eq 5
+JuMP.@expression(model, gᵗʳₛₖₜᵦ[tr=TR, s=Ωᴺ, k=Kᵗʳ[tr], t=T, b=B],
+    if s ∈ Ωˢˢ
+        sum(δᵗʳₛₖₜᵦᵨ[tr,s,k,t,b,ρ]
+        for ρ = 1:nᵨ)
+    else
+        0.0
+    end
+    # gᵗʳₛₖₜᵦ[tr,s,k,t,b] == sum(
+    #     δᵗʳₛₖₜᵦᵨ[tr,s,k,t,b,ρ]
+    # for ρ in 1:nᵨ)
+)
+JuMP.@constraint(model, constr_aux_g_tr[tr=TR, s=Ωᴺ, k=Kᵗʳ[tr], t=T, b=B], 0 <= gᵗʳₛₖₜᵦ[tr, s, k, t, b]) 
+JuMP.@expression(model, fˡₛᵣₖₜᵦ[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B],
+    sum(
+        δˡₛᵣₖₜᵦᵨ[l,s,r,k,t,b,ρ]
+    for ρ in 1:nᵨ)
+)
+JuMP.@constraint(model, eq5_aux1[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B], 0 <= fˡₛᵣₖₜᵦ[l,s,r,k,t,b]) 
+JuMP.@constraint(model, eq5_aux2[tr=TR, s=Ωˢˢ, k=Kᵗʳ[tr], t=T, b=B, ρ=1:nᵨ],
+    δᵗʳₛₖₜᵦᵨ[tr,s,k,t,b,ρ] <= Aᵗʳₖᵨ[tr][k][ρ]
+)
+JuMP.@constraint(model, eq5_aux4[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B, ρ=1:nᵨ],
+    δˡₛᵣₖₜᵦᵨ[l,s,r,k,t,b,ρ] <= Aˡₖᵨ[l][k][ρ]
+)
+
+
+## eq4
+JuMP.@expression(model, cᴱₜ[t=T],
     sum(Δᵦ[b]*pf*(
             sum(sum(sum(
                         Cˢˢᵦ[b]*gᵗʳₛₖₜᵦ[tr,s,k,t,b]
@@ -108,7 +129,8 @@ JuMP.@constraint(model, eq4[t=T], cᴱₜ[t] ==
     for b in B)
 )
 
-JuMP.@constraint(model, eq5[t=T], cᴿₜ[t] ==
+## eq5
+JuMP.@expression(model, cᴿₜ[t=T],
     sum(Δᵦ[b]*Cˢˢᵦ[b]*pf*(
             sum(sum(sum(sum(
                             Mᵗʳₖᵨ[tr][k][ρ]*δᵗʳₛₖₜᵦᵨ[tr,s,k,t,b,ρ]
@@ -125,28 +147,21 @@ JuMP.@constraint(model, eq5[t=T], cᴿₜ[t] ==
         )
     for b in B)
 )
-JuMP.@constraint(model, eq5_aux1[tr=TR, s=Ωˢˢ, k=Kᵗʳ[tr], t=T, b=B],
-    gᵗʳₛₖₜᵦ[tr,s,k,t,b] == sum(
-        δᵗʳₛₖₜᵦᵨ[tr,s,k,t,b,ρ]
-    for ρ in 1:nᵨ)
-)
-JuMP.@constraint(model, eq5_aux2[tr=TR, s=Ωˢˢ, k=Kᵗʳ[tr], t=T, b=B, ρ=1:nᵨ],
-    δᵗʳₛₖₜᵦᵨ[tr,s,k,t,b,ρ] <= Aᵗʳₖᵨ[tr][k][ρ]
-)
-JuMP.@constraint(model, eq5_aux3[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B],
-    fˡₛᵣₖₜᵦ[l,s,r,k,t,b] == sum(
-        δˡₛᵣₖₜᵦᵨ[l,s,r,k,t,b,ρ]
-    for ρ in 1:nᵨ)
-)
-JuMP.@constraint(model, eq5_aux4[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B, ρ=1:nᵨ],
-    δˡₛᵣₖₜᵦᵨ[l,s,r,k,t,b,ρ] <= Aˡₖᵨ[l][k][ρ]
-)
 
-JuMP.@constraint(model, eq6[t=T], cᵁₜ[t] ==
+JuMP.@expression(model, dᵁₛₜᵦ[s=Ωᴺ, t=T, b=B], 0.0) # Removing dᵁₛₜᵦ improves the solver performance.
+## eq6
+JuMP.@expression(model, cᵁₜ[t=T],
     sum(sum(
             Δᵦ[b]*Cᵁ*pf*dᵁₛₜᵦ[s,t,b]
         for s in Ωᴸᴺₜ[t])
     for b in B)
+)
+
+#Costs
+JuMP.@expression(model, cᵀᴾⱽ,
+    sum(cᴵₜ[t]*((1+i)^-t)/i for t in T)
+    + sum((cᴹₜ[t] + cᴱₜ[t] + cᴿₜ[t] + cᵁₜ[t]) *(1+i)^-t for t in T)
+    + (cᴹₜ[nT] + cᴱₜ[nT] + cᴿₜ[nT] + cᵁₜ[nT])*((1+ i)^-nT)/i
 )
 
 # Operational Constraints
@@ -369,7 +384,8 @@ JuMP.@constraint(model, eq36_aux[s = [s for s in Ωᴺ if s ∉ Ωˢˢ], t= T, b
     g̃ˢˢₛₜᵦ[s,t,b] == 0
 )
 
-
+#Objective Function
+JuMP.@objective(model, Min, cᵀᴾⱽ)
 # JuMP.set_silent(model)
 JuMP.optimize!(model)
 if JuMP.termination_status(model) != JuMP.MOI.OPTIMAL
