@@ -10,7 +10,7 @@ function println_lista(lista)
     println("]")
 end
 
-include("dados/138bus/main.jl")
+include("dados/24bus/main.jl")
 model = JuMP.Model(CPLEX.Optimizer)
 
 JuMP.set_optimizer_attribute(model, "CPX_PARAM_EPGAP", 0.01/100)
@@ -26,7 +26,7 @@ JuMP.set_optimizer_attribute(model, "CPX_PARAM_EPGAP", 0.01/100)
 # JuMP.@variable(model, 0 <= dᵁₛₜᵦ[Ωᴺ, T, B])
 # JuMP.@variable(model, 0 <= fˡₛᵣₖₜᵦ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T, B])
 JuMP.@variable(model, 0 <= f̃ˡₛᵣₖₜᵦ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T, B])
-JuMP.@variable(model, 0 <= gᵖₛₖₜᵦ[p=P, Ωᴺ, Kᵖ[p], T, B])
+JuMP.@variable(model, 0 <= gᵖₛₖₜᵦ[p=P, Ωᵖ[p], Kᵖ[p], T, B])
 # JuMP.@variable(model, 0 <= gᵗʳₛₖₜᵦ[tr=TR, Ωᴺ, Kᵗʳ[tr], T, B])
 JuMP.@variable(model, 0 <= g̃ˢˢₛₜᵦ[Ωᴺ, T, B])
 JuMP.@variable(model, 0 <= vₛₜᵦ[Ωᴺ, T, B])
@@ -35,11 +35,18 @@ JuMP.@variable(model, xᴺᵀₛₖₜ[Ωˢˢ, Kᵗʳ["NT"], T], Bin)
 JuMP.@variable(model, xᵖₛₖₜ[p=P, Ωᵖ[p], Kᵖ[p], T], Bin)
 JuMP.@variable(model, xˢˢₛₜ[Ωˢˢ, T], Bin)
 JuMP.@variable(model, yˡₛᵣₖₜ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T], Bin)
-JuMP.@variable(model, yᵖₛₖₜ[p=P, Ωᴺ, Kᵖ[p], T], Bin)
+JuMP.@variable(model, yᵖₛₖₜ[p=P, Ωᵖ[p], Kᵖ[p], T], Bin)
 JuMP.@variable(model, yᵗʳₛₖₜ[tr=TR, Ωˢˢ, Kᵗʳ[tr], T], Bin)
 JuMP.@variable(model, 0 <= δˡₛᵣₖₜᵦᵨ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T, B, ρ=1:nᵨ])
 JuMP.@variable(model, 0 <= δᵗʳₛₖₜᵦᵨ[tr=TR, Ωˢˢ, Kᵗʳ[tr], T, B, ρ=1:nᵨ])
 
+JuMP.@expression(model, g_p_warp[p=P, s=Ωᴺ, k=Kᵖ[p], t=T, b=B],
+    if s ∈ Ωᵖ[p]
+        gᵖₛₖₜᵦ[p, s, k, t, b]
+    else
+        0.0
+    end
+)
 
 ## eq2
 JuMP.@expression(model, cᴵₜ[t=T],
@@ -185,11 +192,11 @@ JuMP.@constraint(model, eq10[t=T, s=Ωᴺ, b=B],
     dᵁₛₜᵦ[s,t,b] <= μᵦ[b]*Dₛₜ[s,t]
 )
 
-JuMP.@constraint(model, eq11[s=Ωᴺ, k=Kᵖ["C"], t=T, b=B],
+JuMP.@constraint(model, eq11[s=Ωᵖ["C"], k=Kᵖ["C"], t=T, b=B],
     gᵖₛₖₜᵦ["C",s,k,t,b] <= yᵖₛₖₜ["C",s,k,t]*G̅ᵖₖ["C"][k]
 )
 
-JuMP.@constraint(model, eq12[s=Ωᴺ, k=Kᵖ["W"], t=T, b=B],
+JuMP.@constraint(model, eq12[s=Ωᵖ["W"], k=Kᵖ["W"], t=T, b=B],
     gᵖₛₖₜᵦ["W",s,k,t,b] <= yᵖₛₖₜ["W",s,k,t]*minimum([G̅ᵖₖ["W"][k], Ĝᵂₛₖₜᵦ[s,k,t,b]])
 )
 
@@ -215,14 +222,14 @@ JuMP.@constraint(model, eq14[s=Ωᴺ, t=T, b=B], # Eq14 needs the follow fixes
         for k in Kᵗʳ[tr])
     for tr in TR)
     + sum(sum(
-            gᵖₛₖₜᵦ[p,s,k,t,b]
+            g_p_warp[p,s,k,t,b]
         for k in Kᵖ[p])
     for p in P)
     - μᵦ[b]*Dₛₜ[s,t] + dᵁₛₜᵦ[s,t,b]
 )
-JuMP.@constraint(model, eq14_aux1[ p = P, s = [s for s in Ωᴺ if s ∉ Ωᵖ[p]], k  =  Kᵖ[p],  t = T], #It allows DG only on candidates nodes
-        yᵖₛₖₜ[p,s,k,t] == 0
-)
+# JuMP.@constraint(model, eq14_aux1[ p = P, s = [s for s in Ωᴺ if s ∉ Ωᵖ[p]], k  =  Kᵖ[p],  t = T], #It allows DG only on candidates nodes
+#         yᵖₛₖₜ[p,s,k,t] == 0
+# )
 # JuMP.@constraint(model, eq14_aux2[ tr = TR, s = [s for s in Ωᴺ if s ∉ Ωˢˢ], k  =  Kᵗʳ[tr],  t = T], #It allows transf. only on candidates nodes
 #         yᵗʳₛₖₜ[tr,s,k,t] == 0
 # )
