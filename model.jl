@@ -10,8 +10,9 @@ function println_lista(lista)
     println("]")
 end
 
-include("dados/24bus/main.jl")
+include("dados/138bus/main.jl")
 model = JuMP.Model(CPLEX.Optimizer)
+
 JuMP.set_optimizer_attribute(model, "CPX_PARAM_EPGAP", 0.01/100)
 
 
