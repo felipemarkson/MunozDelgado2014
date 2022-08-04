@@ -10,9 +10,9 @@ function println_lista(lista)
     println("]")
 end
 
-include("dados/138bus/main.jl")
+include("dados/24bus/main.jl")
 model = JuMP.Model(CPLEX.Optimizer)
-JuMP.set_optimizer_attribute(model, "CPX_PARAM_EPGAP", 0.1/100)
+JuMP.set_optimizer_attribute(model, "CPX_PARAM_EPGAP", 0.01/100)
 
 
 #Variables
@@ -35,7 +35,7 @@ JuMP.@variable(model, xᵖₛₖₜ[p=P, Ωᵖ[p], Kᵖ[p], T], Bin)
 JuMP.@variable(model, xˢˢₛₜ[Ωˢˢ, T], Bin)
 JuMP.@variable(model, yˡₛᵣₖₜ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T], Bin)
 JuMP.@variable(model, yᵖₛₖₜ[p=P, Ωᴺ, Kᵖ[p], T], Bin)
-JuMP.@variable(model, yᵗʳₛₖₜ[tr=TR, Ωᴺ, Kᵗʳ[tr], T], Bin)
+JuMP.@variable(model, yᵗʳₛₖₜ[tr=TR, Ωˢˢ, Kᵗʳ[tr], T], Bin)
 JuMP.@variable(model, 0 <= δˡₛᵣₖₜᵦᵨ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T, B, ρ=1:nᵨ])
 JuMP.@variable(model, 0 <= δᵗʳₛₖₜᵦᵨ[tr=TR, Ωˢˢ, Kᵗʳ[tr], T, B, ρ=1:nᵨ])
 
@@ -176,7 +176,7 @@ JuMP.@constraint(model, eq8[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B],
     fˡₛᵣₖₜᵦ[l,s,r,k,t,b] <= yˡₛᵣₖₜ[l,s,r,k,t]*F̅ˡₖ[l][k]
 )
 
-JuMP.@constraint(model, eq9[tr=TR, s=Ωᴺ, k=Kᵗʳ[tr], t=T, b=B],
+JuMP.@constraint(model, eq9[tr=TR, s=Ωˢˢ, k=Kᵗʳ[tr], t=T, b=B],
     gᵗʳₛₖₜᵦ[tr,s,k,t,b] <= yᵗʳₛₖₜ[tr,s,k,t]*G̅ᵗʳₖ[tr][k]
 )
 
@@ -222,9 +222,9 @@ JuMP.@constraint(model, eq14[s=Ωᴺ, t=T, b=B], # Eq14 needs the follow fixes
 JuMP.@constraint(model, eq14_aux1[ p = P, s = [s for s in Ωᴺ if s ∉ Ωᵖ[p]], k  =  Kᵖ[p],  t = T], #It allows DG only on candidates nodes
         yᵖₛₖₜ[p,s,k,t] == 0
 )
-JuMP.@constraint(model, eq14_aux2[ tr = TR, s = [s for s in Ωᴺ if s ∉ Ωˢˢ], k  =  Kᵗʳ[tr],  t = T], #It allows transf. only on candidates nodes
-        yᵗʳₛₖₜ[tr,s,k,t] == 0
-)
+# JuMP.@constraint(model, eq14_aux2[ tr = TR, s = [s for s in Ωᴺ if s ∉ Ωˢˢ], k  =  Kᵗʳ[tr],  t = T], #It allows transf. only on candidates nodes
+#         yᵗʳₛₖₜ[tr,s,k,t] == 0
+# )
 JuMP.@constraint(model, eq14_axu3[s=Ωˢˢᴺ, k=Kᵗʳ["ET"], t=T, b=B], # It avoids "ET" transf. on new substations
     yᵗʳₛₖₜ["ET",s,k,t] == 0
 )
@@ -467,7 +467,7 @@ for t in T
     println("   Stage: ", t)
     println("       TRANSFORMERS:")
     for tr in TR
-        for s in Ωᴺ
+        for s in Ωˢˢ
             for k in Kᵗʳ[tr]
                 data = [JuMP.value(gᵗʳₛₖₜᵦ[tr,s,k,t,b]) for b in B]
                 usetr = JuMP.value(yᵗʳₛₖₜ[tr,s,k,t]) > 0
