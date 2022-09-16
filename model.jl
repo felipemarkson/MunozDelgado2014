@@ -1,6 +1,10 @@
 import JuMP
-import CPLEX
+# import CPLEX
+import Gurobi
 using Crayons
+
+opt =  Gurobi.Optimizer
+# opt = CPLEX.Optimizer
 
 function println_lista(lista)
     print("[")
@@ -10,13 +14,13 @@ function println_lista(lista)
     println("]")
 end
 
-include("dados/24bus/main.jl")
-model = JuMP.Model(CPLEX.Optimizer)
-
-JuMP.set_optimizer_attribute(model, "CPX_PARAM_EPGAP", 0.01/100)
+include("dados/138bus_4stages/main.jl")
+model = JuMP.Model(opt)
 
 
-#Variables
+
+
+# Variables
 # JuMP.@variable(model, 0 <= cᴱₜ[T])
 # JuMP.@variable(model, 0 <= cᴹₜ[T])
 # JuMP.@variable(model, 0 <= cᴿₜ[T])
@@ -176,9 +180,14 @@ JuMP.@expression(model, cᵀᴾⱽ,
 JuMP.@constraint(model, eq7[s=Ωᴺ,t=T,b=B],
     V_ <= vₛₜᵦ[s,t,b] <= V̅
 )
-JuMP.@constraint(model, eq7_aux[s=Ωˢˢ,t=T,b=B],
-    vₛₜᵦ[s,t,b] == Vˢˢ
-)
+
+# This fixes the voltage of the substation nodes.
+for s=Ωˢˢ,t=T,b=B
+    JuMP.fix(vₛₜᵦ[s,t,b], Vˢˢ; force = true)
+end
+# JuMP.@constraint(model, eq7_aux[s=Ωˢˢ,t=T,b=B],
+#     vₛₜᵦ[s,t,b] == Vˢˢ
+# )
 
 JuMP.@constraint(model, eq8[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B],
     fˡₛᵣₖₜᵦ[l,s,r,k,t,b] <= yˡₛᵣₖₜ[l,s,r,k,t]*F̅ˡₖ[l][k]
@@ -388,9 +397,11 @@ JuMP.@constraint(model, eq35[l=["NRF", "NAF"], (s,r) = [branch for branch in γ�
 JuMP.@constraint(model, eq36[s = Ωˢˢ, t= T, b= B],
     g̃ˢˢₛₜᵦ[s,t,b] <= ndg
 )
-JuMP.@constraint(model, eq36_aux[s = [s for s in Ωᴺ if s ∉ Ωˢˢ], t= T, b= B], #Its allows ficticius injections only on substations node
-    g̃ˢˢₛₜᵦ[s,t,b] == 0
-)
+
+#Its allows ficticius injections only on substations node
+for s = [s for s in Ωᴺ if s ∉ Ωˢˢ], t= T, b= B
+    JuMP.fix(g̃ˢˢₛₜᵦ[s,t,b], 0.0; force=true)
+end
 
 #Objective Function
 JuMP.@objective(model, Min, cᵀᴾⱽ)
