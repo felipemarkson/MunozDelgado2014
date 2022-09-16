@@ -40,15 +40,15 @@ Cᴹᵗʳₖ = Dict( #0.05*Cᴵᵖₖ*Gᵖₖ
 
 Dₛₜ = SystemData.peak_demand
 
-D̃ₛₜᵦ = zeros(length(Ωᴺ), length(T), length(B))
+D̃ₛₜ = zeros(length(Ωᴺ), length(T))
+D̃ = 0.1
+Mᴰ = 1e6
 for s in Ωᴺ
     for t in T
-        for b in B
-            if s in Ωᵖ["C"] || s in Ωᵖ["W"] && s in Ωᴸᴺₜ[t]
-                D̃ₛₜᵦ[s, t, b] = 1
-            else
-                D̃ₛₜᵦ[s, t, b] = 0
-            end
+        if s in Ωᴸᴺₜ[t]
+            D̃ₛₜ[s, t] = D̃
+        else
+            D̃ₛₜ[s, t] = 0
         end
     end
 end
@@ -103,18 +103,18 @@ end
 G̅ᵗʳₖ = Dict("ET" => [7.5], "NT" => [12, 15])
 
 Vbase = 20 #kV
-V_ = 0.95*Vbase
-V̅ = 1.05*Vbase
-Vˢˢ = 1.05*Vbase
+V_ = 0.95 * Vbase
+V̅ = 1.05 * Vbase
+Vˢˢ = 1.05 * Vbase
 
 ℓₛᵣ = zeros(length(Ωᴺ), length(Ωᴺ))
 for branch in SystemData.branch
     (s, r) = branch[1]
-    ℓₛᵣ[s,r] = branch[2]
-    ℓₛᵣ[r,s] = branch[2]
+    ℓₛᵣ[s, r] = branch[2]
+    ℓₛᵣ[r, s] = branch[2]
 end
 
-ndg = reduce( + , [length(Ωᵖ[p]) for p in P])
+ndg = reduce(+, [length(Ωᵖ[p]) for p in P])
 
 nT = length(T)
 
@@ -123,7 +123,7 @@ pf = 0.9
 H = V̅ - V_  #Ref: DOI: 10.1109/TPWRS.2017.2764331
 
 # Assets Data
-i = 7.1/100
+i = 7.1 / 100
 
 IBₜ = [6e6 for t in T]
 
@@ -142,15 +142,15 @@ IBₜ = [6e6 for t in T]
 ηˢˢ = 100
 
 RRˡ = Dict(
-    "NRF" => (i*(1+i)^ηˡ["NRF"])/((1+i)^ηˡ["NRF"] - 1),
-    "NAF" => (i*(1+i)^ηˡ["NAF"])/((1+i)^ηˡ["NAF"] - 1)
+    "NRF" => (i * (1 + i)^ηˡ["NRF"]) / ((1 + i)^ηˡ["NRF"] - 1),
+    "NAF" => (i * (1 + i)^ηˡ["NAF"]) / ((1 + i)^ηˡ["NAF"] - 1)
 )
 
-RRᴺᵀ = (i*(1+i)^ηᴺᵀ)/((1+i)^ηᴺᵀ - 1)
+RRᴺᵀ = (i * (1 + i)^ηᴺᵀ) / ((1 + i)^ηᴺᵀ - 1)
 
-RRᵖ =  Dict(
-    "C" => (i*(1+i)^ηᵖ["C"])/((1+i)^ηᵖ["C"] - 1),
-    "W" => (i*(1+i)^ηᵖ["W"])/((1+i)^ηᵖ["W"] - 1)
+RRᵖ = Dict(
+    "C" => (i * (1 + i)^ηᵖ["C"]) / ((1 + i)^ηᵖ["C"] - 1),
+    "W" => (i * (1 + i)^ηᵖ["W"]) / ((1 + i)^ηᵖ["W"] - 1)
 )
 
 RRˢˢ = i
@@ -195,28 +195,28 @@ Aˡₖᵨ = Dict(
 for l in L
     for k in Kˡ[l]
         for p in 1:nᵨ
-            push!(Mˡₖᵨ[l][k], (2*p - 1)*Zˡₖ[l][k]*F̅ˡₖ[l][k]/(nᵨ*(Vbase^2)))
-            push!(Aˡₖᵨ[l][k], F̅ˡₖ[l][k]/nᵨ)
+            push!(Mˡₖᵨ[l][k], (2 * p - 1) * Zˡₖ[l][k] * F̅ˡₖ[l][k] / (nᵨ * (Vbase^2)))
+            push!(Aˡₖᵨ[l][k], F̅ˡₖ[l][k] / nᵨ)
         end
     end
 end
 
 Mᵗʳₖᵨ = Dict(
     "ET" => [[]],
-    "NT" => [[],[]],
+    "NT" => [[], []],
 )
 
 Aᵗʳₖᵨ = Dict(
     "ET" => [[]],
-    "NT" => [[],[]],
+    "NT" => [[], []],
 )
 
 
 for tr in TR
     for k in Kᵗʳ[tr]
         for p in 1:nᵨ
-            push!(Mᵗʳₖᵨ[tr][k], (2*p - 1)*Zᵗʳₖ[tr][k]*G̅ᵗʳₖ[tr][k]/(nᵨ*(Vˢˢ^2)))
-            push!(Aᵗʳₖᵨ[tr][k], G̅ᵗʳₖ[tr][k]/nᵨ)
+            push!(Mᵗʳₖᵨ[tr][k], (2 * p - 1) * Zᵗʳₖ[tr][k] * G̅ᵗʳₖ[tr][k] / (nᵨ * (Vˢˢ^2)))
+            push!(Aᵗʳₖᵨ[tr][k], G̅ᵗʳₖ[tr][k] / nᵨ)
         end
     end
 end
