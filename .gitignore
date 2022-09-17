@@ -25,3 +25,7 @@ docs/site/
 Manifest.toml
 
 .vscode
+*.prm
+*.lp
+*.mps
+*.log
