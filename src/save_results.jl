@@ -31,6 +31,7 @@ function save_results(mdl, name)
     end
 
     function write_msg(msg, name, title)
+        mkpath("results/$name")
         open("results/$name/$title.log", "w") do io
             for txt in msg
                 write(io, txt * "\n")
@@ -41,7 +42,7 @@ function save_results(mdl, name)
 
     invst_msg = ["SYSTEM : $name"]
 
-    add_line!(invst_msg, "$(now())")
+    add_line!(invst_msg, "$(Dates.now())")
     add_line!(invst_msg, "Fobj(x10⁶): $fobj")
     add_line!(invst_msg, "Investiment Costs(x10⁶): ")
     add_line!(invst_msg, lista2str(invest))
@@ -107,7 +108,7 @@ function save_results(mdl, name)
     write_msg(invst_msg, name, "investiment")
 
     pf_msg = ["SYSTEM POWERFLOW : $name"]
-    add_line!(pf_msg, "$(now())")
+    add_line!(pf_msg, "$(Dates.now())")
     for t in T
         add_line!(pf_msg, "   Stage: $t")
         add_line!(pf_msg, "       TRANSFORMERS:")

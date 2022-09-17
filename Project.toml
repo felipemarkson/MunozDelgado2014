@@ -1,6 +1,6 @@
 name = "MunozDelgado2014"
 uuid = "13da4ae5-6830-5b45-8fa1-3a1d57a72793"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Felipe M. dos S. Monteiro <fmarkson@outlook.com>"]
 
 [deps]

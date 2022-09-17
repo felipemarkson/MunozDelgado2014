@@ -11,12 +11,20 @@ function test_primal()
     model = MD14.build_model(path)
     JuMP.set_optimizer(model, HiGHS.Optimizer)
     set_optimizer_attribute(model, "mip_rel_gap", 1e-1)
+    set_silent(model)
     optimize!(model)
     @test primal_status(model) == MOI.FEASIBLE_POINT
+    return model
+end
+
+function test_save_results(model)
+    MD14.save_results(model, "24bus")
 end
 
 function runtest()
-    test_primal()
+    model = test_primal()
+    test_save_results(model)
+
 end    
 end
 
