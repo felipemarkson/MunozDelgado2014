@@ -39,6 +39,7 @@ end
 Ωˢˢᴱ = [136, 137] # Fixing eq14
 Ωˢˢᴺ = [138] # Fixing eq14
 
+Ωₛ = Dict([i => Set() for i = 1:SystemData.n_bus])
 Ωˡₛ = Dict(
     "EFF" => [[] for i = 1:SystemData.n_bus],
     "ERF" => [[] for i = 1:SystemData.n_bus],
@@ -50,6 +51,8 @@ for branch_type in L
     for (s, r) in branches
         push!(Ωˡₛ[branch_type][s], r)
         push!(Ωˡₛ[branch_type][r], s)
+        push!(Ωₛ[s], r)
+        push!(Ωₛ[r], s)
     end
 end
 

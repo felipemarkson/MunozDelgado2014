@@ -1,0 +1,56 @@
+SYSTEM : 24bus
+2022-09-16T21:06:00.525
+Fobj(x10⁶): 264.64
+Investiment Costs(x10⁶): 
+[0.541 0.519 0.41 ]
+Maintenance Costs(x10⁶): 
+[0.223 0.443 0.658 ]
+Energy (Production) Costs(x10⁶): 
+[6.471 10.437 17.912 ]
+Losses Costs(x10⁶): 
+[0.051 0.093 0.209 ]
+Unserverd Costs(x10⁶): 
+[0.0 0.0 0.0 ]
+Investiments: 
+   Stage: 1
+       NEW SUBSTATIONS:
+           Node: 23
+       NEW TRANSFORMERS:
+           Node: 23  Alternative: 2
+       NEW GENERATOR:
+           Node: 3  Type: C  Alternative: 2
+           Node: 9  Type: W  Alternative: 2
+       LINES:
+           REPLECEMENT LINE -> Branch: (1, 21) Alternative: 2
+           NEW LINE -> Branch: (1, 5) Alternative: 1
+           NEW LINE -> Branch: (1, 9) Alternative: 1
+           NEW LINE -> Branch: (3, 23) Alternative: 2
+           NEW LINE -> Branch: (4, 9) Alternative: 1
+           NEW LINE -> Branch: (7, 23) Alternative: 2
+           NEW LINE -> Branch: (10, 23) Alternative: 2
+   Stage: 2
+       NEW SUBSTATIONS:
+           Node: 24
+       NEW TRANSFORMERS:
+           Node: 24  Alternative: 1
+       NEW GENERATOR:
+           Node: 2  Type: C  Alternative: 2
+           Node: 18  Type: W  Alternative: 2
+       LINES:
+           NEW LINE -> Branch: (2, 12) Alternative: 1
+           NEW LINE -> Branch: (3, 16) Alternative: 1
+           NEW LINE -> Branch: (6, 13) Alternative: 1
+           NEW LINE -> Branch: (11, 23) Alternative: 2
+           NEW LINE -> Branch: (14, 18) Alternative: 2
+           NEW LINE -> Branch: (15, 17) Alternative: 1
+           NEW LINE -> Branch: (17, 22) Alternative: 1
+           NEW LINE -> Branch: (18, 24) Alternative: 2
+   Stage: 3
+       NEW SUBSTATIONS:
+       NEW TRANSFORMERS:
+       NEW GENERATOR:
+           Node: 17  Type: C  Alternative: 2
+           Node: 4  Type: W  Alternative: 2
+       LINES:
+           NEW LINE -> Branch: (7, 19) Alternative: 1
+           NEW LINE -> Branch: (20, 24) Alternative: 2

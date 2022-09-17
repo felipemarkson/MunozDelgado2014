@@ -35,6 +35,10 @@ Thus, the data used is from [this reference](https://wind-turbine.com/download/1
 
 The paper uses 1% of the relative gap. We use 0.01%.
 
+## Radiality
+
+We simplify the radiality constraints. But it is not expected to change the results.
+
 ## Other changes
 
 Some other minor changes were made, but it is not expected to cause differences between 
