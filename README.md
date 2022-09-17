@@ -18,7 +18,9 @@ See [CHANGES.md](CHANGES.md) for more details.
 
 1. Install the dependencies (CPLEX or Gurobi, JuMP, CPLEX.jl or Gurobi.jl)
 
+3. Edit the `run_model.jl` to the model that you want to test.
+
 2. Run:
 ``` model
-julia model.jl
+julia run_model.jl
 ```
