@@ -40,15 +40,15 @@ Cᴹᵗʳₖ = Dict( #0.05*Cᴵᵖₖ*Gᵖₖ
 
 Dₛₜ = SystemData.peak_demand
 
-D̃ₛₜᵦ = zeros(length(Ωᴺ), length(T), length(B))
+D̃ₛₜ = zeros(length(Ωᴺ), length(T))
+D̃ = 0.1
+Mᴰ = 1e6
 for s in Ωᴺ
     for t in T
-        for b in B
-            if s in Ωᵖ["C"] || s in Ωᵖ["W"] && s in Ωᴸᴺₜ[t]
-                D̃ₛₜᵦ[s, t, b] = 1
-            else
-                D̃ₛₜᵦ[s, t, b] = 0
-            end
+        if s in Ωᴸᴺₜ[t]
+            D̃ₛₜ[s, t] = D̃
+        else
+            D̃ₛₜ[s, t] = 0
         end
     end
 end
