@@ -9,7 +9,7 @@ using JuMP
 function test_primal(path; run=false)
 
     model = MD14.build_model(path)
-    JuMP.set_optimizer(model, HiGHS.Optimizer)
+    JuMP.set_optimizer(model, HiGHS.Optimizer; add_bridges=false)
     set_optimizer_attribute(model, "mip_rel_gap", 1e-1)
     if run
         set_silent(model)
