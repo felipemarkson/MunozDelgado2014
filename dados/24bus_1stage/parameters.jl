@@ -40,15 +40,16 @@ Cᴹᵗʳₖ = Dict( #0.05*Cᴵᵖₖ*Gᵖₖ
 
 Dₛₜ = SystemData.peak_demand
 
-D̃ₛₜ = zeros(length(Ωᴺ), length(T))
+D̃ₛₜ = Dict([s => Dict([t => 0.0 for t in T]) for s in Ωᴺ])
+
 D̃ = 0.1
 Mᴰ = 1e6
 for s in Ωᴺ
     for t in T
         if s in Ωᴸᴺₜ[t]
-            D̃ₛₜ[s, t] = D̃
+            D̃ₛₜ[s][t] = D̃
         else
-            D̃ₛₜ[s, t] = 0
+            D̃ₛₜ[s][t] = 0
         end
     end
 end
@@ -62,7 +63,16 @@ F̅ˡₖ = Dict(
 
 G̅ᵖₖ = Dict("C" => [1, 2], "W" => [0.91, 2.05])
 
-Ĝᵂₛₖₜᵦ = zeros(length(Ωᴺ), length(Kᵖ["W"]), length(T), length(B))
+# Ĝᵂₛₖₜᵦ = zeros(length(Ωᴺ), length(Kᵖ["W"]), length(T), length(B))
+Ĝᵂₛₖₜᵦ =
+    Dict([s =>
+        Dict([k =>
+            Dict([t =>
+                Dict([b => 0.0
+                      for b in B])
+                  for t in T])
+              for k in Kᵖ["W"]])
+          for s in Ωᴺ])
 # begin
 #     # Ref: https://wind-turbine.com/download/101655/enercon_produkt_en_06_2015.pdf
 #     wᵢ = [4.0, 3.0]
@@ -93,7 +103,7 @@ begin
                 for b in B
                     zone = SystemData.node_zone[s]
                     speed = SystemData.wind_speed[zone, b]
-                    Ĝᵂₛₖₜᵦ[s, k, t, b] = power_out_v2(k, speed)
+                    Ĝᵂₛₖₜᵦ[s][k][t][b] = power_out_v2(k, speed)
                 end
             end
         end
@@ -125,7 +135,7 @@ H = V̅ - V_  #Ref: DOI: 10.1109/TPWRS.2017.2764331
 # Assets Data
 i = 7.1 / 100
 
-IBₜ = [6e6 for t in T]
+IBₜ = Dict([t=> 6e6 for t in T])
 
 ηˡ = Dict(
     "NRF" => 25,

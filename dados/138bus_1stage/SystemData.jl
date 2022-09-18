@@ -301,7 +301,7 @@ peak_demand = [
     0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 #add eq14 problem
 ]/1000
 
-peak_demand = peak_demand[:,end]
+# peak_demand = peak_demand[:,end]
 
 node_zone = [
     2,

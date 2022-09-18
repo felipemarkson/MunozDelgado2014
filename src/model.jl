@@ -169,7 +169,7 @@ function build_model(path2main)
     JuMP.@expression(model, cᵀᴾⱽ,
         sum(cᴵₜ[t] * ((1 + i)^-t) / i for t in T)
         + sum((cᴹₜ[t] + cᴱₜ[t] + cᴿₜ[t] + cᵁₜ[t]) * (1 + i)^-t for t in T)
-        + (cᴹₜ[nT] + cᴱₜ[nT] + cᴿₜ[nT] + cᵁₜ[nT]) * ((1 + i)^-nT) / i
+        + (cᴹₜ[T[end]] + cᴱₜ[T[end]] + cᴿₜ[T[end]] + cᵁₜ[T[end]]) * ((1 + i)^(-T[end])) / i
     )
 
     # Operational Constraints
@@ -202,7 +202,7 @@ function build_model(path2main)
     )
 
     JuMP.@constraint(model, eq12[s=Ωᵖ["W"], k=Kᵖ["W"], t=T, b=B],
-        gᵖₛₖₜᵦ["W", s, k, t, b] <= yᵖₛₖₜ["W", s, k, t] * minimum([G̅ᵖₖ["W"][k], Ĝᵂₛₖₜᵦ[s, k, t, b]])
+        gᵖₛₖₜᵦ["W", s, k, t, b] <= yᵖₛₖₜ["W", s, k, t] * minimum([G̅ᵖₖ["W"][k], Ĝᵂₛₖₜᵦ[s][k][t][b]])
     )
 
     JuMP.@constraint(model, eq13[t=T, b=B],
@@ -290,7 +290,7 @@ function build_model(path2main)
     )
 
     JuMP.@constraint(model, eq21[s=Ωˢˢ, k=Kᵗʳ["NT"], t=T],
-        xᴺᵀₛₖₜ[s, k, t] <= sum(xˢˢₛₜ[s, τ] for τ in 1:t)
+        xᴺᵀₛₖₜ[s, k, t] <= sum(xˢˢₛₜ[s, τ] for τ in T if τ ≥ t)
     )
 
     #Eq. updated #Ref: DOI: 10.1109/TSG.2016.2560339
@@ -300,20 +300,20 @@ function build_model(path2main)
 
     #Eq. updated #Ref: DOI: 10.1109/TSG.2016.2560339
     JuMP.@constraint(model, eq23[l=["NRF", "NAF"], (s, r)=[branch for branch in γˡ[l]], k=Kˡ[l], t=T],
-        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == sum(xˡₛᵣₖₜ[l, s, r, k, τ] for τ in 1:t)
+        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == sum(xˡₛᵣₖₜ[l, s, r, k, τ] for τ  in T if τ ≥ t)
     )
 
     #Eq. updated #Ref: DOI: 10.1109/TSG.2016.2560339
     JuMP.@constraint(model, eq24[l=["ERF"], (s, r)=[branch for branch in γˡ[l]], k=Kˡ[l], t=T],
-        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == 1 - sum(sum(xˡₛᵣₖₜ["NRF", s, r, κ, τ] for κ in Kˡ["NRF"]) for τ in 1:t)
+        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == 1 - sum(sum(xˡₛᵣₖₜ["NRF", s, r, κ, τ] for κ in Kˡ["NRF"]) for τ  in T if τ ≥ t)
     )
 
     JuMP.@constraint(model, eq25[s=Ωˢˢ, k=Kᵗʳ["NT"], t=T],
-        yᵗʳₛₖₜ["NT", s, k, t] <= sum(xᴺᵀₛₖₜ[s, k, τ] for τ in 1:t)
+        yᵗʳₛₖₜ["NT", s, k, t] <= sum(xᴺᵀₛₖₜ[s, k, τ] for τ  in T if τ ≥ t)
     )
 
     JuMP.@constraint(model, eq26[p=P, s=Ωᵖ[p], k=Kᵖ[p], t=T],
-        yᵖₛₖₜ[p, s, k, t] <= sum(xᵖₛₖₜ[p, s, k, τ] for τ in 1:t)
+        yᵖₛₖₜ[p, s, k, t] <= sum(xᵖₛₖₜ[p, s, k, τ] for τ  in T if τ ≥ t)
     )
 
     JuMP.@constraint(model, eq27[t=T],

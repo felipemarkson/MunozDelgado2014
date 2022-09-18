@@ -1,7 +1,7 @@
 name = "MunozDelgado2014"
 uuid = "13da4ae5-6830-5b45-8fa1-3a1d57a72793"
-version = "0.1.1"
 authors = ["Felipe M. dos S. Monteiro <fmarkson@outlook.com>"]
+version = "0.1.2"
 
 [deps]
 Crayons = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"

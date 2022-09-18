@@ -1,4 +1,4 @@
-module test24bus
+module testSys
 import MunozDelgado2014
 MD14 = MunozDelgado2014
 
@@ -6,29 +6,42 @@ using Test
 using HiGHS
 using JuMP
 
-function test_primal()
-    path = "../dados/24bus_1stage"
+function test_primal(path; run=false)
+
     model = MD14.build_model(path)
     JuMP.set_optimizer(model, HiGHS.Optimizer)
     set_optimizer_attribute(model, "mip_rel_gap", 1e-1)
-    set_silent(model)
-    optimize!(model)
-    @test primal_status(model) == MOI.FEASIBLE_POINT
+    if run
+        set_silent(model)
+        optimize!(model)
+        @test primal_status(model) == MOI.FEASIBLE_POINT
+    end
+    @test true
     return model
 end
 
-function test_save_results(model)
-    MD14.save_results(model, "24bus")
+function test_save_results(model, name)
+    MD14.save_results(model, name)
 end
 
 function runtest()
-    model = test_primal()
-    test_save_results(model)
+    # systems = Dict(["24bus_1" => "../dados/24bus_1stage", "138bus_1" => "../dados/138bus_1stage"])
+    systems = Dict(["24bus" => "../dados/24bus","24bus_1stage" => "../dados/24bus_1stage", "138bus" => "../dados/138bus", "138bus_4" => "../dados/138bus_4stages", "138bus_1" => "../dados/138bus_1stage"])
+    to_solve = ["138bus_1", "24bus_1stage"]
+    for sys in keys(systems)
+        @testset "$sys" begin
+            run = sys in to_solve
+            model = test_primal(systems[sys]; run=run)
+            if run
+                test_save_results(model, sys)
+            end
+        end
+    end
 
-end    
+end
 end
 
 
-import .test24bus
+import .testSys
 
-test24bus.runtest()
+testSys.runtest()

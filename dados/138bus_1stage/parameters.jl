@@ -40,15 +40,17 @@ Cᴹᵗʳₖ = Dict( #0.05*Cᴵᵖₖ*Gᵖₖ
 
 Dₛₜ = SystemData.peak_demand
 
-D̃ₛₜ = zeros(length(Ωᴺ), length(T))
+# D̃ₛₜ = OffsetArray(zeros(length(Ωᴺ), length(T)), Ωᴺ, T[1]:T[end])
+D̃ₛₜ = Dict([s => Dict([t => 0.0 for t in T]) for s in Ωᴺ])
+
 D̃ = 0.1
 Mᴰ = 1e6
 for s in Ωᴺ
     for t in T
         if s in Ωᴸᴺₜ[t]
-            D̃ₛₜ[s, t] = D̃
+            D̃ₛₜ[s][t] = D̃
         else
-            D̃ₛₜ[s, t] = 0
+            D̃ₛₜ[s][t] = 0
         end
     end
 end
@@ -62,7 +64,16 @@ F̅ˡₖ = Dict(
 
 G̅ᵖₖ = Dict("C" => [1, 2], "W" => [0.91, 2.05])
 
-Ĝᵂₛₖₜᵦ = zeros(length(Ωᴺ), length(Kᵖ["W"]), length(T), length(B))
+# Ĝᵂₛₖₜᵦ = zeros(length(Ωᴺ), length(Kᵖ["W"]), length(T), length(B))
+Ĝᵂₛₖₜᵦ =
+    Dict([s =>
+        Dict([k =>
+            Dict([t =>
+                Dict([b => 0.0
+                      for b in B])
+                  for t in T])
+              for k in Kᵖ["W"]])
+          for s in Ωᴺ])
 # begin
 #     # Ref: https://wind-turbine.com/download/101655/enercon_produkt_en_06_2015.pdf
 #     wᵢ = [4.0, 3.0]
@@ -93,7 +104,7 @@ begin
                 for b in B
                     zone = SystemData.node_zone[s]
                     speed = SystemData.wind_speed[zone, b]
-                    Ĝᵂₛₖₜᵦ[s, k, t, b] = power_out_v2(k, speed)
+                    Ĝᵂₛₖₜᵦ[s][k][t][b] = power_out_v2(k, speed)
                 end
             end
         end
@@ -103,18 +114,18 @@ end
 G̅ᵗʳₖ = Dict("ET" => [12], "NT" => [7.5, 15])
 
 Vbase = 13.8 #kV
-V_ = 0.95*Vbase
-V̅ = 1.05*Vbase
-Vˢˢ = 1.05*Vbase
+V_ = 0.95 * Vbase
+V̅ = 1.05 * Vbase
+Vˢˢ = 1.05 * Vbase
 
 ℓₛᵣ = zeros(length(Ωᴺ), length(Ωᴺ))
 for branch in SystemData.branch
     (s, r) = branch[1]
-    ℓₛᵣ[s,r] = branch[2]
-    ℓₛᵣ[r,s] = branch[2]
+    ℓₛᵣ[s, r] = branch[2]
+    ℓₛᵣ[r, s] = branch[2]
 end
 
-ndg = reduce( + , [length(Ωᵖ[p]) for p in P])
+ndg = reduce(+, [length(Ωᵖ[p]) for p in P])
 
 nT = length(T)
 
@@ -123,9 +134,9 @@ pf = 0.9
 H = V̅ - V_  #Ref: DOI: 10.1109/TPWRS.2017.2764331
 
 # Assets Data
-i = 7.1/100
+i = 7.1 / 100
 
-IBₜ = [5e6 for t in T]
+IBₜ = Dict([t=> 5e6 for t in T])
 
 ηˡ = Dict(
     "NRF" => 25,
@@ -142,15 +153,15 @@ IBₜ = [5e6 for t in T]
 ηˢˢ = 100
 
 RRˡ = Dict(
-    "NRF" => (i*(1+i)^ηˡ["NRF"])/((1+i)^ηˡ["NRF"] - 1),
-    "NAF" => (i*(1+i)^ηˡ["NAF"])/((1+i)^ηˡ["NAF"] - 1)
+    "NRF" => (i * (1 + i)^ηˡ["NRF"]) / ((1 + i)^ηˡ["NRF"] - 1),
+    "NAF" => (i * (1 + i)^ηˡ["NAF"]) / ((1 + i)^ηˡ["NAF"] - 1)
 )
 
-RRᴺᵀ = (i*(1+i)^ηᴺᵀ)/((1+i)^ηᴺᵀ - 1)
+RRᴺᵀ = (i * (1 + i)^ηᴺᵀ) / ((1 + i)^ηᴺᵀ - 1)
 
-RRᵖ =  Dict(
-    "C" => (i*(1+i)^ηᵖ["C"])/((1+i)^ηᵖ["C"] - 1),
-    "W" => (i*(1+i)^ηᵖ["W"])/((1+i)^ηᵖ["W"] - 1)
+RRᵖ = Dict(
+    "C" => (i * (1 + i)^ηᵖ["C"]) / ((1 + i)^ηᵖ["C"] - 1),
+    "W" => (i * (1 + i)^ηᵖ["W"]) / ((1 + i)^ηᵖ["W"] - 1)
 )
 
 RRˢˢ = i
@@ -195,28 +206,28 @@ Aˡₖᵨ = Dict(
 for l in L
     for k in Kˡ[l]
         for p in 1:nᵨ
-            push!(Mˡₖᵨ[l][k], (2*p - 1)*Zˡₖ[l][k]*F̅ˡₖ[l][k]/(nᵨ*(Vbase^2)))
-            push!(Aˡₖᵨ[l][k], F̅ˡₖ[l][k]/nᵨ)
+            push!(Mˡₖᵨ[l][k], (2 * p - 1) * Zˡₖ[l][k] * F̅ˡₖ[l][k] / (nᵨ * (Vbase^2)))
+            push!(Aˡₖᵨ[l][k], F̅ˡₖ[l][k] / nᵨ)
         end
     end
 end
 
 Mᵗʳₖᵨ = Dict(
     "ET" => [[]],
-    "NT" => [[],[]],
+    "NT" => [[], []],
 )
 
 Aᵗʳₖᵨ = Dict(
     "ET" => [[]],
-    "NT" => [[],[]],
+    "NT" => [[], []],
 )
 
 
 for tr in TR
     for k in Kᵗʳ[tr]
         for p in 1:nᵨ
-            push!(Mᵗʳₖᵨ[tr][k], (2*p - 1)*Zᵗʳₖ[tr][k]*G̅ᵗʳₖ[tr][k]/(nᵨ*(Vˢˢ^2)))
-            push!(Aᵗʳₖᵨ[tr][k], G̅ᵗʳₖ[tr][k]/nᵨ)
+            push!(Mᵗʳₖᵨ[tr][k], (2 * p - 1) * Zᵗʳₖ[tr][k] * G̅ᵗʳₖ[tr][k] / (nᵨ * (Vˢˢ^2)))
+            push!(Aᵗʳₖᵨ[tr][k], G̅ᵗʳₖ[tr][k] / nᵨ)
         end
     end
 end

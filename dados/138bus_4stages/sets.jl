@@ -3,7 +3,7 @@ include("SystemData.jl")
 # Sets of indexes
 B = Vector(1:length(SystemData.load_factor))
 
-T = Vector(1:size(SystemData.peak_demand)[2])
+T = [1, 2, 5, 7, 10]
 
 L = ["EFF", "ERF", "NRF", "NAF"]
 
