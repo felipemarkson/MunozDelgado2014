@@ -15,7 +15,7 @@ function build_model(path2main)
 
     include(path2main*"/main.jl")
     model = JuMP.Model()
-
+    JuMP.set_string_names_on_creation(model, false)
 
 
 
