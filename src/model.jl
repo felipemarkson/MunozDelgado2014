@@ -13,11 +13,12 @@ using Crayons
 function build_model(path2main)
 
 
-    include(path2main*"/main.jl")
+    include(path2main * "/main.jl")
     model = JuMP.Model()
     JuMP.set_string_names_on_creation(model, false)
 
-
+    Sᴿᵂ = [1, 2]
+    αᴿᵂ = [0, 1]
 
     # Variables
     # JuMP.@variable(model, 0 ≤ cᴱₜ[T])
@@ -29,10 +30,11 @@ function build_model(path2main)
     # JuMP.@variable(model, 0 ≤ dᵁₛₜᵦ[Ωᴺ, T, B])
     # JuMP.@variable(model, 0 ≤ fˡₛᵣₖₜᵦ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T, B])
     JuMP.@variable(model, 0 ≤ f̃ₛᵣₜ[s=Ωᴺ, Ωₛ[s], T] ≤ ndg * D̃)
-    JuMP.@variable(model, gᵖₛₖₜᵦ[p=P, Ωᵖ[p], Kᵖ[p], T, B] ≥ 0 )
+    JuMP.@variable(model, gᴿᵂₛₖₜᵦ[p=RW, Ωᵖ[p], Kᵖ[p], T, B] ≥ 0)
+    JuMP.@variable(model, gᴰₛₖₜᵦₕ[p=D, Ωᵖ[p], Kᵖ[p], T, B, Sᴿᵂ] ≥ 0)
     # JuMP.@variable(model, 0 ≤ gᵗʳₛₖₜᵦ[tr=TR, Ωᴺ, Kᵗʳ[tr], T, B])
     JuMP.@variable(model, 0 ≤ g̃ˢˢₛₜ[Ωˢˢ, T] ≤ ndg * D̃)
-    JuMP.@variable(model, V_ ≤ vₛₜᵦ[Ωᴺ, T, B] ≤ V̅, start = Vbase)
+    JuMP.@variable(model, V_ ≤ vₛₜᵦₕ[Ωᴺ, T, B, Sᴿᵂ] ≤ V̅, start = Vbase)
     JuMP.@variable(model, xˡₛᵣₖₜ[l=["NRF", "NAF"], s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T]; binary=true)
     JuMP.@variable(model, xᴺᵀₛₖₜ[Ωˢˢ, Kᵗʳ["NT"], T]; binary=true)
     JuMP.@variable(model, xᵖₛₖₜ[p=P, Ωᵖ[p], Kᵖ[p], T]; binary=true)
@@ -40,12 +42,18 @@ function build_model(path2main)
     JuMP.@variable(model, yˡₛᵣₖₜ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T]; binary=true)
     JuMP.@variable(model, yᵖₛₖₜ[p=P, Ωᵖ[p], Kᵖ[p], T]; binary=true)
     JuMP.@variable(model, yᵗʳₛₖₜ[tr=TR, Ωˢˢ, Kᵗʳ[tr], T]; binary=true)
-    JuMP.@variable(model, δˡₛᵣₖₜᵦᵨ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T, B, ρ=1:nᵨ]  ≥ 0)
-    JuMP.@variable(model, δᵗʳₛₖₜᵦᵨ[tr=TR, Ωˢˢ, Kᵗʳ[tr], T, B, ρ=1:nᵨ]  ≥ 0)
+    JuMP.@variable(model, δˡₛᵣₖₜᵦₕᵨ[l=L, s=Ωᴺ, Ωˡₛ[l][s], Kˡ[l], T, B, Sᴿᵂ, ρ=1:nᵨ] ≥ 0)
+    JuMP.@variable(model, δᵗʳₛₖₜᵦₕᵨ[tr=TR, Ωˢˢ, Kᵗʳ[tr], T, B, Sᴿᵂ, ρ=1:nᵨ] ≥ 0)
 
-    JuMP.@expression(model, g_p_warp[p=P, s=Ωᴺ, k=Kᵖ[p], t=T, b=B],
+    JuMP.@expression(model, g_p_warp[p=P, s=Ωᴺ, k=Kᵖ[p], t=T, b=B, h=Sᴿᵂ],
         if s ∈ Ωᵖ[p]
-            gᵖₛₖₜᵦ[p, s, k, t, b]
+            if p in RW
+                αᴿᵂ[h] * gᴿᵂₛₖₜᵦ[p, s, k, t, b]
+            elseif p in D
+                gᴰₛₖₜᵦₕ[p, s, k, t, b, h]
+            else
+                error("Invalid")
+            end
         else
             0.0
         end
@@ -66,10 +74,15 @@ function build_model(path2main)
             for s in Ωˢˢ)
                      for k in Kᵗʳ["NT"])
         + sum(RRᵖ[p] * sum(sum(
-            Cᴵᵖₖ[p][k] * pf * G̅ᵖₖ[p][k] * xᵖₛₖₜ[p, s, k, t]
+            Cᴵᵖₖ[p][k] * pf * G̅ᴿᵂₚₖ[p][k] * xᵖₛₖₜ[p, s, k, t]
             for s in Ωᵖ[p])
                            for k in Kᵖ[p])
-              for p in P)
+              for p in RW)
+        + sum(RRᵖ[p] * sum(sum(
+            Cᴵᵖₖ[p][k] * pf * G̅ᴰₚₖ[p][k] * xᵖₛₖₜ[p, s, k, t]
+            for s in Ωᵖ[p])
+                           for k in Kᵖ[p])
+              for p in D)
     )
 
     ## eq3
@@ -92,9 +105,9 @@ function build_model(path2main)
     )
 
     ## eq 5
-    JuMP.@expression(model, gᵗʳₛₖₜᵦ[tr=TR, s=Ωᴺ, k=Kᵗʳ[tr], t=T, b=B],
+    JuMP.@expression(model, gᵗʳₛₖₜᵦₕ[tr=TR, s=Ωᴺ, k=Kᵗʳ[tr], t=T, b=B, h=Sᴿᵂ],
         if s ∈ Ωˢˢ
-            sum(δᵗʳₛₖₜᵦᵨ[tr, s, k, t, b, ρ]
+            sum(δᵗʳₛₖₜᵦₕᵨ[tr, s, k, t, b, h, ρ]
                 for ρ = 1:nᵨ)
         else
             0.0
@@ -104,17 +117,17 @@ function build_model(path2main)
         # for ρ in 1:nᵨ)
     )
     # JuMP.@constraint(model, constr_aux_g_tr[tr=TR, s=Ωᴺ, k=Kᵗʳ[tr], t=T, b=B], 0 ≤ gᵗʳₛₖₜᵦ[tr, s, k, t, b])
-    JuMP.@expression(model, fˡₛᵣₖₜᵦ[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B],
+    JuMP.@expression(model, fˡₛᵣₖₜᵦₕ[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B, h=Sᴿᵂ],
         sum(
-            δˡₛᵣₖₜᵦᵨ[l, s, r, k, t, b, ρ]
+            δˡₛᵣₖₜᵦₕᵨ[l, s, r, k, t, b, h, ρ]
             for ρ in 1:nᵨ)
     )
     # JuMP.@constraint(model, eq5_aux1[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B], 0 ≤ fˡₛᵣₖₜᵦ[l, s, r, k, t, b])
-    JuMP.@constraint(model, eq5_aux2[tr=TR, s=Ωˢˢ, k=Kᵗʳ[tr], t=T, b=B, ρ=1:nᵨ],
-        δᵗʳₛₖₜᵦᵨ[tr, s, k, t, b, ρ] ≤ Aᵗʳₖᵨ[tr][k][ρ]
+    JuMP.@constraint(model, eq5_aux2[tr=TR, s=Ωˢˢ, k=Kᵗʳ[tr], t=T, b=B, h=Sᴿᵂ, ρ=1:nᵨ],
+        δᵗʳₛₖₜᵦₕᵨ[tr, s, k, t, b, h, ρ] ≤ Aᵗʳₖᵨ[tr][k][ρ]
     )
-    JuMP.@constraint(model, eq5_aux4[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B, ρ=1:nᵨ],
-        δˡₛᵣₖₜᵦᵨ[l, s, r, k, t, b, ρ] ≤ Aˡₖᵨ[l][k][ρ]
+    JuMP.@constraint(model, eq5_aux4[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B, h=Sᴿᵂ, ρ=1:nᵨ],
+        δˡₛᵣₖₜᵦₕᵨ[l, s, r, k, t, b, h, ρ] ≤ Aˡₖᵨ[l][k][ρ]
     )
 
 
@@ -122,13 +135,13 @@ function build_model(path2main)
     JuMP.@expression(model, cᴱₜ[t=T],
         sum(Δᵦ[b] * pf * (
                 sum(sum(sum(
-                    Cˢˢᵦ[b] * gᵗʳₛₖₜᵦ[tr, s, k, t, b]
+                    Cˢˢᵦ[b] * gᵗʳₛₖₜᵦₕ[tr, s, k, t, b, 2]
                     for s in Ωˢˢ)
                         for k in Kᵗʳ[tr])
                     for tr in TR)
                 +
                 sum(sum(sum(
-                    Cᴱᵖₖ[p][k] * gᵖₛₖₜᵦ[p, s, k, t, b]
+                    Cᴱᵖₖ[p][k] * g_p_warp[p, s, k, t, b, 2]
                     for s in Ωᵖ[p])
                         for k in Kᵖ[p])
                     for p in P)
@@ -140,14 +153,14 @@ function build_model(path2main)
     JuMP.@expression(model, cᴿₜ[t=T],
         sum(Δᵦ[b] * Cˢˢᵦ[b] * pf * (
                 sum(sum(sum(sum(
-                    Mᵗʳₖᵨ[tr][k][ρ] * δᵗʳₛₖₜᵦᵨ[tr, s, k, t, b, ρ]
+                    Mᵗʳₖᵨ[tr][k][ρ] * δᵗʳₛₖₜᵦₕᵨ[tr, s, k, t, b, 2, ρ]
                     for ρ = 1:nᵨ)
                             for s in Ωˢˢ)
                         for k in Kᵗʳ[tr])
                     for tr in TR)
                 +
                 sum(sum(sum(sum(
-                    Mˡₖᵨ[l][k][ρ] * ℓₛᵣ[s, r] * (δˡₛᵣₖₜᵦᵨ[l, s, r, k, t, b, ρ] + δˡₛᵣₖₜᵦᵨ[l, r, s, k, t, b, ρ])
+                    Mˡₖᵨ[l][k][ρ] * ℓₛᵣ[s, r] * (δˡₛᵣₖₜᵦₕᵨ[l, s, r, k, t, b, 2, ρ] + δˡₛᵣₖₜᵦₕᵨ[l, r, s, k, t, b, 2, ρ])
                     for ρ = 1:nᵨ)
                             for (s, r) in γˡ[l])
                         for k in Kˡ[l])
@@ -156,11 +169,11 @@ function build_model(path2main)
             for b in B)
     )
 
-    JuMP.@expression(model, dᵁₛₜᵦ[s=Ωᴺ, t=T, b=B], 0.0) # Removing dᵁₛₜᵦ improves the solver performance.
+    JuMP.@expression(model, dᵁₛₜᵦₕ[s=Ωᴺ, t=T, b=B, h=Sᴿᵂ], 0.0) # Removing dᵁₛₜᵦ improves the solver performance.
     ## eq6
     JuMP.@expression(model, cᵁₜ[t=T],
         sum(sum(
-            Δᵦ[b] * Cᵁ * pf * dᵁₛₜᵦ[s, t, b]
+            Δᵦ[b] * Cᵁ * pf * dᵁₛₜᵦₕ[s, t, b, 2]
             for s in Ωᴸᴺₜ[t])
             for b in B)
     )
@@ -178,63 +191,63 @@ function build_model(path2main)
     # )
 
     # This fixes the voltage of the substation nodes.
-    for s = Ωˢˢ, t = T, b = B
-        JuMP.fix(vₛₜᵦ[s, t, b], Vˢˢ; force=true)
+    for s = Ωˢˢ, t = T, b = B, h = Sᴿᵂ
+        JuMP.fix(vₛₜᵦₕ[s, t, b, h], Vˢˢ; force=true)
     end
     # JuMP.@constraint(model, eq7_aux[s=Ωˢˢ,t=T,b=B],
     #     vₛₜᵦ[s,t,b] == Vˢˢ
     # )
 
-    JuMP.@constraint(model, eq8[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B],
-        fˡₛᵣₖₜᵦ[l, s, r, k, t, b] ≤ yˡₛᵣₖₜ[l, s, r, k, t] * F̅ˡₖ[l][k]
+    JuMP.@constraint(model, eq8[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B, h=Sᴿᵂ],
+        fˡₛᵣₖₜᵦₕ[l, s, r, k, t, b, h] ≤ yˡₛᵣₖₜ[l, s, r, k, t] * F̅ˡₖ[l][k]
     )
 
-    JuMP.@constraint(model, eq9[tr=TR, s=Ωˢˢ, k=Kᵗʳ[tr], t=T, b=B],
-        gᵗʳₛₖₜᵦ[tr, s, k, t, b] ≤ yᵗʳₛₖₜ[tr, s, k, t] * G̅ᵗʳₖ[tr][k]
+    JuMP.@constraint(model, eq9[tr=TR, s=Ωˢˢ, k=Kᵗʳ[tr], t=T, b=B, h=Sᴿᵂ],
+        gᵗʳₛₖₜᵦₕ[tr, s, k, t, b, h] ≤ yᵗʳₛₖₜ[tr, s, k, t] * G̅ᵗʳₖ[tr][k]
     )
 
-    JuMP.@constraint(model, eq10[t=T, s=Ωᴺ, b=B],
-        dᵁₛₜᵦ[s, t, b] ≤ μᵦ[b] * Dₛₜ[s, t]
+    JuMP.@constraint(model, eq10[t=T, s=Ωᴺ, b=B, h=Sᴿᵂ],
+        dᵁₛₜᵦₕ[s, t, b, h] ≤ μᵦ[b] * Dₛₜ[s, t]
     )
 
-    JuMP.@constraint(model, eq11[s=Ωᵖ["C"], k=Kᵖ["C"], t=T, b=B],
-        gᵖₛₖₜᵦ["C", s, k, t, b] ≤ yᵖₛₖₜ["C", s, k, t] * G̅ᵖₖ["C"][k]
+    JuMP.@constraint(model, eq11[p=D, s=Ωᵖ[p], k=Kᵖ[p], t=T, b=B, h=Sᴿᵂ],
+        gᴰₛₖₜᵦₕ[p, s, k, t, b, h] ≤ yᵖₛₖₜ[p, s, k, t] * G̅ᴰₚₖ[p][k]
     )
 
-    JuMP.@constraint(model, eq12[s=Ωᵖ["W"], k=Kᵖ["W"], t=T, b=B],
-        gᵖₛₖₜᵦ["W", s, k, t, b] ≤ yᵖₛₖₜ["W", s, k, t] * minimum([G̅ᵖₖ["W"][k], Ĝᵂₛₖₜᵦ[s][k][t][b]])
+    JuMP.@constraint(model, eq12[p=RW, s=Ωᵖ[p], k=Kᵖ[p], t=T, b=B],
+        gᴿᵂₛₖₜᵦ[p, s, k, t, b] == yᵖₛₖₜ[p, s, k, t] * minimum([G̅ᴿᵂₚₖ[p][k], Ĝᴿᵂₚₛₖₜᵦ[p][s][k][t][b]])
     )
 
-    JuMP.@constraint(model, eq13[t=T, b=B],
+    # JuMP.@constraint(model, eq13[t=T, b=B, h=2],
+    #     sum(sum(sum(
+    #         g_p_warp[p, s, k, t, b, h]
+    #         for s in Ωᵖ[p])
+    #             for k in Kᵖ[p])
+    #         for p in P)
+    #     ≤
+    #     ℇ * sum(
+    #         μᵦ[b] * Dₛₜ[s, t]
+    #         for s in Ωᴸᴺₜ[t])
+    # )
+
+    JuMP.@constraint(model, eq14[s=Ωᴺ, t=T, b=B, h=Sᴿᵂ], # Eq14 needs the follow fixes
         sum(sum(sum(
-            gᵖₛₖₜᵦ[p, s, k, t, b]
-            for s in Ωᵖ[p])
-                for k in Kᵖ[p])
-            for p in P)
-        ≤
-        ℇ * sum(
-            μᵦ[b] * Dₛₜ[s, t]
-            for s in Ωᴸᴺₜ[t])
-    )
-
-    JuMP.@constraint(model, eq14[s=Ωᴺ, t=T, b=B], # Eq14 needs the follow fixes
-        sum(sum(sum(
-            fˡₛᵣₖₜᵦ[l, s, r, k, t, b] - fˡₛᵣₖₜᵦ[l, r, s, k, t, b]
+            fˡₛᵣₖₜᵦₕ[l, s, r, k, t, b, h] - fˡₛᵣₖₜᵦₕ[l, r, s, k, t, b, h]
             for r in Ωˡₛ[l][s])
                 for k in Kˡ[l])
             for l in L)
         ==
         sum(sum(
-            gᵗʳₛₖₜᵦ[tr, s, k, t, b]
+            gᵗʳₛₖₜᵦₕ[tr, s, k, t, b, h]
             for k in Kᵗʳ[tr])
             for tr in TR)
         +
         sum(sum(
-            g_p_warp[p, s, k, t, b]
+            g_p_warp[p, s, k, t, b, h]
             for k in Kᵖ[p])
             for p in P)
         -
-        μᵦ[b] * Dₛₜ[s, t] + dᵁₛₜᵦ[s, t, b]
+        μᵦ[b] * Dₛₜ[s, t] + dᵁₛₜᵦₕ[s, t, b, h]
     )
     # JuMP.@constraint(model, eq14_aux1[ p = P, s = [s for s in Ωᴺ if s ∉ Ωᵖ[p]], k  =  Kᵖ[p],  t = T], #It allows DG only on candidates nodes
     #         yᵖₛₖₜ[p,s,k,t] == 0
@@ -247,7 +260,7 @@ function build_model(path2main)
     # )
 
     # It avoids "ET" transf. on new substations
-    for s = Ωˢˢᴺ, k = Kᵗʳ["ET"], t = T, b = B
+    for s = Ωˢˢᴺ, k = Kᵗʳ["ET"], t = T
         JuMP.fix(yᵗʳₛₖₜ["ET", s, k, t], 0, force=true)
     end
 
@@ -256,11 +269,11 @@ function build_model(path2main)
     )
 
     #Eq 15 and 16
-    JuMP.@constraint(model, eq16_1[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B],
-        -Zˡₖ[l][k] * ℓₛᵣ[s, r] * fˡₛᵣₖₜᵦ[l, s, r, k, t, b] / Vbase + (vₛₜᵦ[s, t, b] - vₛₜᵦ[r, t, b]) ≤ H * (1 - yˡₛᵣₖₜ[l, s, r, k, t])
+    JuMP.@constraint(model, eq16_1[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B, h=Sᴿᵂ],
+        -Zˡₖ[l][k] * ℓₛᵣ[s, r] * fˡₛᵣₖₜᵦₕ[l, s, r, k, t, b, h] / Vbase + (vₛₜᵦₕ[s, t, b, h] - vₛₜᵦₕ[r, t, b, h]) ≤ H * (1 - yˡₛᵣₖₜ[l, s, r, k, t])
     )
-    JuMP.@constraint(model, eq16_2[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B],
-        Zˡₖ[l][k] * ℓₛᵣ[s, r] * fˡₛᵣₖₜᵦ[l, s, r, k, t, b] / Vbase - (vₛₜᵦ[s, t, b] - vₛₜᵦ[r, t, b]) ≤ H * (1 - yˡₛᵣₖₜ[l, s, r, k, t])
+    JuMP.@constraint(model, eq16_2[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B, h=Sᴿᵂ],
+        Zˡₖ[l][k] * ℓₛᵣ[s, r] * fˡₛᵣₖₜᵦₕ[l, s, r, k, t, b, h] / Vbase - (vₛₜᵦₕ[s, t, b, h] - vₛₜᵦₕ[r, t, b, h]) ≤ H * (1 - yˡₛᵣₖₜ[l, s, r, k, t])
     )
 
     #Investiment constraints
@@ -300,20 +313,20 @@ function build_model(path2main)
 
     #Eq. updated #Ref: DOI: 10.1109/TSG.2016.2560339
     JuMP.@constraint(model, eq23[l=["NRF", "NAF"], (s, r)=[branch for branch in γˡ[l]], k=Kˡ[l], t=T],
-        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == sum(xˡₛᵣₖₜ[l, s, r, k, τ] for τ  in T if τ ≥ t)
+        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == sum(xˡₛᵣₖₜ[l, s, r, k, τ] for τ in T if τ ≥ t)
     )
 
     #Eq. updated #Ref: DOI: 10.1109/TSG.2016.2560339
     JuMP.@constraint(model, eq24[l=["ERF"], (s, r)=[branch for branch in γˡ[l]], k=Kˡ[l], t=T],
-        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == 1 - sum(sum(xˡₛᵣₖₜ["NRF", s, r, κ, τ] for κ in Kˡ["NRF"]) for τ  in T if τ ≥ t)
+        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == 1 - sum(sum(xˡₛᵣₖₜ["NRF", s, r, κ, τ] for κ in Kˡ["NRF"]) for τ in T if τ ≥ t)
     )
 
     JuMP.@constraint(model, eq25[s=Ωˢˢ, k=Kᵗʳ["NT"], t=T],
-        yᵗʳₛₖₜ["NT", s, k, t] ≤ sum(xᴺᵀₛₖₜ[s, k, τ] for τ  in T if τ ≥ t)
+        yᵗʳₛₖₜ["NT", s, k, t] ≤ sum(xᴺᵀₛₖₜ[s, k, τ] for τ in T if τ ≥ t)
     )
 
     JuMP.@constraint(model, eq26[p=P, s=Ωᵖ[p], k=Kᵖ[p], t=T],
-        yᵖₛₖₜ[p, s, k, t] ≤ sum(xᵖₛₖₜ[p, s, k, τ] for τ  in T if τ ≥ t)
+        yᵖₛₖₜ[p, s, k, t] ≤ sum(xᵖₛₖₜ[p, s, k, τ] for τ in T if τ ≥ t)
     )
 
     JuMP.@constraint(model, eq27[t=T],
@@ -330,10 +343,15 @@ function build_model(path2main)
             for s in Ωˢˢ)
               for k in Kᵗʳ["NT"])
         + sum(sum(sum(
-            Cᴵᵖₖ[p][k] * pf * G̅ᵖₖ[p][k] * xᵖₛₖₜ[p, s, k, t]
+            Cᴵᵖₖ[p][k] * pf * G̅ᴿᵂₚₖ[p][k] * xᵖₛₖₜ[p, s, k, t]
             for s in Ωᵖ[p])
                   for k in Kᵖ[p])
-              for p in P)
+              for p in RW)
+        + sum(sum(sum(
+            Cᴵᵖₖ[p][k] * pf * G̅ᴰₚₖ[p][k] * xᵖₛₖₜ[p, s, k, t]
+            for s in Ωᵖ[p])
+                  for k in Kᵖ[p])
+              for p in D)
         ≤
         IBₜ[t])
 
@@ -405,22 +423,22 @@ function build_model(path2main)
 
     JuMP.@constraint(model, eq_new2[r=Ωᴺ, s=Ωₛ[r], t=T],
         f̃ₛᵣₜ[s, r, t] ≤ D̃ * ndg *
-                          sum(
-                              sum(
-                                  sum(
-                                      yˡₛᵣₖₜ[l, s2, r, k, t]
-                                      for k = Kˡ[l])
-                                  for s2 ∈ Ωˡₛ[l][r] if s2 == s)
-                              for l = L)
+                         sum(
+                             sum(
+                                 sum(
+                                     yˡₛᵣₖₜ[l, s2, r, k, t]
+                                     for k = Kˡ[l])
+                                 for s2 ∈ Ωˡₛ[l][r] if s2 == s)
+                             for l = L)
     )
 
     JuMP.@constraint(model, eq_new3[s=Ωˢˢ, t=T],
         g̃ˢˢₛₜ[s, t] ≤ D̃ * ndg *
-                        sum(
-                            sum(
-                                yᵗʳₛₖₜ[tr, s, k, t]
-                                for k ∈ Kᵗʳ[tr])
-                            for tr ∈ TR)
+                       sum(
+                           sum(
+                               yᵗʳₛₖₜ[tr, s, k, t]
+                               for k ∈ Kᵗʳ[tr])
+                           for tr ∈ TR)
     )
 
     #Objective Function

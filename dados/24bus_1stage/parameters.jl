@@ -61,18 +61,21 @@ F̅ˡₖ = Dict(
     "NAF" => [3.94, 6.28],
 )
 
-G̅ᵖₖ = Dict("C" => [1, 2], "W" => [0.91, 2.05])
+G̅ᴰₚₖ = Dict("C" => [1, 2])
+G̅ᴿᵂₚₖ = Dict("W" => [0.91, 2.05])
 
 # Ĝᵂₛₖₜᵦ = zeros(length(Ωᴺ), length(Kᵖ["W"]), length(T), length(B))
-Ĝᵂₛₖₜᵦ =
-    Dict([s =>
-        Dict([k =>
-            Dict([t =>
-                Dict([b => 0.0
-                      for b in B])
-                  for t in T])
-              for k in Kᵖ["W"]])
-          for s in Ωᴺ])
+Ĝᴿᵂₚₛₖₜᵦ =
+    Dict([p =>
+        Dict([s =>
+            Dict([k =>
+                Dict([t =>
+                    Dict([b => 0.0
+                          for b in B])
+                      for t in T])
+                  for k in Kᵖ["W"]])
+              for s in Ωᴺ])
+          for p in RW])
 # begin
 #     # Ref: https://wind-turbine.com/download/101655/enercon_produkt_en_06_2015.pdf
 #     wᵢ = [4.0, 3.0]
@@ -103,7 +106,7 @@ begin
                 for b in B
                     zone = SystemData.node_zone[s]
                     speed = SystemData.wind_speed[zone, b]
-                    Ĝᵂₛₖₜᵦ[s][k][t][b] = power_out_v2(k, speed)
+                    Ĝᴿᵂₚₛₖₜᵦ["W"][s][k][t][b] = power_out_v2(k, speed)
                 end
             end
         end
@@ -135,7 +138,7 @@ H = V̅ - V_  #Ref: DOI: 10.1109/TPWRS.2017.2764331
 # Assets Data
 i = 7.1 / 100
 
-IBₜ = Dict([t=> 6e6 for t in T])
+IBₜ = Dict([t => 6e6 for t in T])
 
 ηˡ = Dict(
     "NRF" => 25,

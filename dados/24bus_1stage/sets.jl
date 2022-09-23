@@ -8,6 +8,8 @@ T = [3]
 L = ["EFF", "ERF", "NRF", "NAF"]
 
 P = ["C", "W"]
+D = ["C"]
+RW = ["W"]
 
 TR = ["ET", "NT"]
 

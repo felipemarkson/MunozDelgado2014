@@ -115,13 +115,13 @@ function save_results(mdl, name)
         for tr in TR
             for s in Ωˢˢ
                 for k in Kᵗʳ[tr]
-                    data = [value(mdl, :gᵗʳₛₖₜᵦ, tr, s, k, t, b) for b in B]
+                    data = [value(mdl, :gᵗʳₛₖₜᵦₕ, tr, s, k, t, b, 2) for b in B]
                     usetr = value(mdl, :yᵗʳₛₖₜ, tr, s, k, t) > 0
                     has_flow = any(value -> value > 0.01, data)
                     if !(!usetr && has_flow)
                         if usetr
                             add_line!(pf_msg, "           Type: $tr Node: $s Alternative: $k")
-                            value_gtr = round(value(mdl, :gᵗʳₛₖₜᵦ, tr, s, k, t, 3), digits=2)
+                            value_gtr = round(value(mdl, :gᵗʳₛₖₜᵦₕ, tr, s, k, t, 3, 2), digits=2)
                             add_line!(pf_msg, "               Injection: $value_gtr Type: $tr Node: $s Alternative: $k")
                         end
                     else
@@ -135,13 +135,13 @@ function save_results(mdl, name)
         for p in P
             for s in Ωᵖ[p]
                 for k in Kᵖ[p]
-                    data = [value(mdl, :gᵖₛₖₜᵦ, p, s, k, t, b) for b in B]
+                    data = [value(mdl, :g_p_warp, p, s, k, t, b, 2) for b in B]
                     usegd = value(mdl, :yᵖₛₖₜ, p, s, k, t) > 0.1
                     has_flow = any(value -> value > 0.01, data)
                     if !(!usegd && has_flow)
                         if usegd
                             add_line!(pf_msg, "           Type: $p Node: $s  Alternative: $k")
-                            value_gp = round(value(mdl, :gᵖₛₖₜᵦ, p, s, k, t, 3), digits=2)
+                            value_gp = round(value(mdl, :g_p_warp, p, s, k, t, 3, 2), digits=2)
                             add_line!(pf_msg, "               Injection: $value_gp Type: $p Node: $s Alternative: $k")
                         end
                     else
@@ -157,8 +157,8 @@ function save_results(mdl, name)
                 for r in Ωˡₛ[l][s]
                     for k in Kˡ[l]
                         use_line = value(mdl, :yˡₛᵣₖₜ, l, s, r, k, t) > 0.1
-                        data1 = [value(mdl, :fˡₛᵣₖₜᵦ, l, s, r, k, t, b) for b in B]
-                        data2 = [value(mdl, :fˡₛᵣₖₜᵦ, l, r, s, k, t, b) for b in B]
+                        data1 = [value(mdl, :fˡₛᵣₖₜᵦₕ, l, s, r, k, t, b, 2) for b in B]
+                        data2 = [value(mdl, :fˡₛᵣₖₜᵦₕ, l, r, s, k, t, b, 2) for b in B]
                         has_flow_sr = any(value -> value > 0.01, data1)
                         has_flow_rs = any(value -> value > 0.01, data1)
                         has_flow = has_flow_sr || has_flow_rs
@@ -167,19 +167,19 @@ function save_results(mdl, name)
                             if use_line
                                 add_line!(pf_msg, "           Type $l Branch: $((s, r)) Alternative: $k")
                                 if has_flow_sr
-                                    value_fl = round(value(mdl, :fˡₛᵣₖₜᵦ, l, s, r, k, t, 3), digits=2)
+                                    value_fl = round(value(mdl, :fˡₛᵣₖₜᵦₕ, l, s, r, k, t, 3, 2), digits=2)
                                     add_line!(pf_msg, "             Flow $((s, r)): $value_fl")
                                 else
-                                    value_fl = round(value(mdl, :fˡₛᵣₖₜᵦ, l, r, s, k, t, 3), digits=2)
+                                    value_fl = round(value(mdl, :fˡₛᵣₖₜᵦₕ, l, r, s, k, t, 3, 2), digits=2)
                                     add_line!(pf_msg, "             Flow $((s, r)): $value_fl")
                                 end
                             end
                         else
                             println(crayon"red", "ERROR!!!!!!Type ", l, "Branch: ", (s, r), " Alternative: ", k)
                             if has_flow_sr
-                                println(crayon"red", round(value(mdl, :fˡₛᵣₖₜᵦ, l, s, r, k, t, 1), digits=2), round(value(mdl, :fˡₛᵣₖₜᵦ, l, s, r, k, t, 2), digits=2), round(value(mdl, :fˡₛᵣₖₜᵦ, l, s, r, k, t, 3), digits=2))
+                                println(crayon"red", round(value(mdl, :fˡₛᵣₖₜᵦₕ, l, s, r, k, t, 1, 2), digits=2), round(value(mdl, :fˡₛᵣₖₜᵦ, l, s, r, k, t, 2), digits=2), round(value(mdl, :fˡₛᵣₖₜᵦ, l, s, r, k, t, 3), digits=2))
                             else
-                                println(crayon"red", round(value(mdl, :fˡₛᵣₖₜᵦ, l, r, s, k, t, 1), digits=2), round(value(mdl, :fˡₛᵣₖₜᵦ, l, r, s, k, t, 2), digits=2), round(value(mdl, :fˡₛᵣₖₜᵦ, l, r, s, k, t, 3), digits=2))
+                                println(crayon"red", round(value(mdl, :fˡₛᵣₖₜᵦ, l, r, s, k, t, 1, 2), digits=2), round(value(mdl, :fˡₛᵣₖₜᵦ, l, r, s, k, t, 2), digits=2), round(value(mdl, :fˡₛᵣₖₜᵦ, l, r, s, k, t, 3), digits=2))
                             end
                         end
                     end

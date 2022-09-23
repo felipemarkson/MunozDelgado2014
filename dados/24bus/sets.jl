@@ -8,6 +8,8 @@ T = Vector(1:size(SystemData.peak_demand)[2])
 L = ["EFF", "ERF", "NRF", "NAF"]
 
 P = ["C", "W"]
+D = ["C"]
+RW = ["W"]
 
 TR = ["ET", "NT"]
 

@@ -30,10 +30,13 @@ costs. More recent papers avoid that (Eq. 22 - 24).
 During the development of this model, we cannot find the Wind generators' data.
 Thus, the data used is from [this reference](https://wind-turbine.com/download/101655/enercon_produkt_en_06_2015.pdf).
 
+## Separe renewables and dispatchable generators
 
-## Relative GAP
-
-The paper uses 1% of the relative gap. We use 0.01%.
+In this model, we divide the generators into two different sets.
+The $RW$ is related to the renewables generators.
+The $D$ is related to the dispatchable generators.
+In the paper, the authors use just wind and diesel generators.
+Different from paper, renewable generators cannot be dispatchable.
 
 ## Radiality
 
