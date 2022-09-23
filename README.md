@@ -2,7 +2,7 @@
 
 Implementation using JuMP of Distribution Expansion Planning Model proposed by Muñoz-Delgado et al. (2014).
 
-Tested with CPLEX 22.1.0 and Gurobi 9.5.2
+Tested with HiGHS v1.2.2
 
 Reference:
 >Muñoz-Delgado, G., Contreras, J., & Arroyo, J. M. (2014). Joint expansion planning of distributed generation and distribution networks. IEEE Transactions on Power Systems, 30(5), 2579-2590.
