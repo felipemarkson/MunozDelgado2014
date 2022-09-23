@@ -38,6 +38,9 @@ The $D$ is related to the dispatchable generators.
 In the paper, the authors use just wind and diesel generators.
 Different from paper, renewable generators cannot be dispatchable.
 
+We also simulate the case where the renewables are not injecting power into the distribution system.
+This consideration adds the index $h$ to the problem.
+
 ## Radiality
 
 We simplify the radiality constraints. But it is not expected to change the results.
@@ -45,4 +48,4 @@ We simplify the radiality constraints. But it is not expected to change the resu
 ## Other changes
 
 Some other minor changes were made, but it is not expected to cause differences between 
-this implementation and the model proposed by the paper. See the `model.jl` file.
+this implementation and the model proposed by the paper. See the `src/model.jl` file.
