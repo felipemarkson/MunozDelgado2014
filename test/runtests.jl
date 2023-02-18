@@ -8,8 +8,22 @@ using JuMP
 
 function test_primal(path; run=false)
 
-    model = MD14.build_model(path)
-    JuMP.set_optimizer(model, HiGHS.Optimizer; add_bridges=false)
+    model = MD14.build_model(path, HiGHS.Optimizer)
+    # JuMP.set_optimizer(model, ; add_bridges=false)
+    set_optimizer_attribute(model, "mip_rel_gap", 1e-1)
+    if run
+        set_silent(model)
+        optimize!(model)
+        @test primal_status(model) == MOI.FEASIBLE_POINT
+    end
+    @test true
+    return model
+end
+
+function test_primal_direct(path; run=false)
+
+    model = MD14.build_model(path, HiGHS.Optimizer, is_direct=true)
+    # JuMP.set_optimizer(model, ; add_bridges=false)
     set_optimizer_attribute(model, "mip_rel_gap", 1e-1)
     if run
         set_silent(model)
@@ -37,8 +51,10 @@ function runtest()
         @testset "$sys" begin
             run = sys in to_solve
             model = test_primal(systems[sys]; run=run)
+            model2 = test_primal_direct(systems[sys]; run=run)
             if run
                 test_save_results(model, sys)
+                test_save_results(model2, sys)
             end
         end
     end

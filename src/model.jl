@@ -10,11 +10,16 @@ using Crayons
 #     end
 #     println("]")
 # end
-function build_model(path2main)
+function build_model(path2main, optimizer; is_direct=false)
 
 
     include(path2main * "/main.jl")
-    model = JuMP.Model()
+    if is_direct
+        model = JuMP.direct_model(optimizer())
+    else
+        model = JuMP.Model(optimizer)
+    end
+    
     JuMP.set_string_names_on_creation(model, false)
 
     Sᴿᵂ = [1, 2]
