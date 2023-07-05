@@ -308,7 +308,7 @@ function build_model(path2main, optimizer; is_direct=false)
     )
 
     JuMP.@constraint(model, eq21[s=Ωˢˢ, k=Kᵗʳ["NT"], t=T],
-        xᴺᵀₛₖₜ[s, k, t] ≤ sum(xˢˢₛₜ[s, τ] for τ in T if τ ≥ t)
+        xᴺᵀₛₖₜ[s, k, t] ≤ sum(xˢˢₛₜ[s, τ] for τ in T if τ ≤ t)
     )
 
     #Eq. updated #Ref: DOI: 10.1109/TSG.2016.2560339
@@ -318,20 +318,20 @@ function build_model(path2main, optimizer; is_direct=false)
 
     #Eq. updated #Ref: DOI: 10.1109/TSG.2016.2560339
     JuMP.@constraint(model, eq23[l=["NRF", "NAF"], (s, r)=[branch for branch in γˡ[l]], k=Kˡ[l], t=T],
-        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == sum(xˡₛᵣₖₜ[l, s, r, k, τ] for τ in T if τ ≥ t)
+        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == sum(xˡₛᵣₖₜ[l, s, r, k, τ] for τ in T if τ ≤ t)
     )
 
     #Eq. updated #Ref: DOI: 10.1109/TSG.2016.2560339
     JuMP.@constraint(model, eq24[l=["ERF"], (s, r)=[branch for branch in γˡ[l]], k=Kˡ[l], t=T],
-        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == 1 - sum(sum(xˡₛᵣₖₜ["NRF", s, r, κ, τ] for κ in Kˡ["NRF"]) for τ in T if τ ≥ t)
+        yˡₛᵣₖₜ[l, s, r, k, t] + yˡₛᵣₖₜ[l, r, s, k, t] == 1 - sum(sum(xˡₛᵣₖₜ["NRF", s, r, κ, τ] for κ in Kˡ["NRF"]) for τ in T if τ ≤ t)
     )
 
     JuMP.@constraint(model, eq25[s=Ωˢˢ, k=Kᵗʳ["NT"], t=T],
-        yᵗʳₛₖₜ["NT", s, k, t] ≤ sum(xᴺᵀₛₖₜ[s, k, τ] for τ in T if τ ≥ t)
+        yᵗʳₛₖₜ["NT", s, k, t] ≤ sum(xᴺᵀₛₖₜ[s, k, τ] for τ in T if τ ≤ t)
     )
 
     JuMP.@constraint(model, eq26[p=P, s=Ωᵖ[p], k=Kᵖ[p], t=T],
-        yᵖₛₖₜ[p, s, k, t] ≤ sum(xᵖₛₖₜ[p, s, k, τ] for τ in T if τ ≥ t)
+        yᵖₛₖₜ[p, s, k, t] ≤ sum(xᵖₛₖₜ[p, s, k, τ] for τ in T if τ ≤ t)
     )
 
     JuMP.@constraint(model, eq27[t=T],

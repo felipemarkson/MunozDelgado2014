@@ -34,6 +34,14 @@ function test_primal_direct(path; run=false)
     return model
 end
 
+function test_investiment(model)
+    values = JuMP.value.(model[:cᴵₜ])
+    @info values
+    for investment_cost in values
+        @test investment_cost > 100.0
+    end
+end
+
 function test_save_results(model, name)
     MD14.save_results(model, name)
 end
@@ -42,11 +50,12 @@ function runtest()
     systems = Dict(
         "24bus_1" => "../dados/24bus_1stage",
         "24bus" => "../dados/24bus",
-        "138bus_1" => "../dados/138bus_1stage",
-        "138bus_4" => "../dados/138bus_4stages",
-        "138bus" => "../dados/138bus")
+        # "138bus_1" => "../dados/138bus_1stage",
+        # "138bus_4" => "../dados/138bus_4stages",
+        # "138bus" => "../dados/138bus"
+    )
     # systems = Dict(["24bus" => "../dados/24bus","24bus_1" => "../dados/24bus_1stage", "138bus" => "../dados/138bus", "138bus_4" => "../dados/138bus_4stages", "138bus_1" => "../dados/138bus_1stage"])
-    to_solve = ["138bus_1", "24bus_1"]
+    to_solve = ["138bus_1", "24bus_1", "24bus"]
     for sys in keys(systems)
         @testset "$sys" begin
             run = sys in to_solve
@@ -55,6 +64,7 @@ function runtest()
             if run
                 test_save_results(model, sys)
                 test_save_results(model2, sys)
+                test_investiment(model)
             end
         end
     end
