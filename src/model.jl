@@ -391,26 +391,26 @@ function build_model(path2main, optimizer; is_direct=false)
 
     ## Definition of demand
     JuMP.@expression(model, d̃ₛₜ[s=Ωᴺ, t=T],
-        if (s in Ωᵖ["C"]) & (s in Ωᵖ["W"])
+        if (s in Ωᵖ["C"])
             # D̃ₛₜ[s, t]
             +D̃ * sum(
                 yᵖₛₖₜ["C", s, k, t]
                 for k ∈ Kᵖ["C"])
-            +D̃ * sum(
-                yᵖₛₖₜ["W", s, k, t]
-                for k ∈ Kᵖ["W"])
+        #     +D̃ * sum(
+        #         yᵖₛₖₜ["W", s, k, t]
+        #         for k ∈ Kᵖ["W"])
 
-        elseif s in Ωᵖ["C"]
-            # D̃ₛₜ[s, t]
-            +D̃ * sum(
-                yᵖₛₖₜ["C", s, k, t]
-                for k ∈ Kᵖ["C"])
+        # elseif s in Ωᵖ["C"]
+        #     # D̃ₛₜ[s, t]
+        #     +D̃ * sum(
+        #         yᵖₛₖₜ["C", s, k, t]
+        #         for k ∈ Kᵖ["C"])
 
-        elseif s in Ωᵖ["W"]
-            # D̃ₛₜ[s, t]
-            +D̃ * sum(
-                yᵖₛₖₜ["W", s, k, t]
-                for k ∈ Kᵖ["W"])
+        # elseif s in Ωᵖ["W"]
+        #     # D̃ₛₜ[s, t]
+        #     +D̃ * sum(
+        #         yᵖₛₖₜ["W", s, k, t]
+        #         for k ∈ Kᵖ["W"])
 
         else
             0.0

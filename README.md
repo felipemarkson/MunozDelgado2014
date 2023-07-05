@@ -14,13 +14,19 @@ This implementation does not use an identical model proposed by the reference pa
 See [CHANGES.md](CHANGES.md) for more details.
 
 
-## How to run
+## Quick start
 
-1. Install the dependencies (CPLEX or Gurobi, JuMP, CPLEX.jl or Gurobi.jl)
+```julia
+using JuMP
+using HiGHS # This package can be replaced by any other MILP with JuMP interface
+import MunozDelgado2014
+MD14 = MunozDelgado2014
 
-3. Edit the `run_model.jl` to the model that you want to test.
+optimizer =  HiGHS.Optimizer
 
-2. Run:
-``` model
-julia run_model.jl
+path = "path/to/data/folder" # See the folder "dados"
+model = MD14.build_model(path, optimizer; is_direct=true)
+optimize!(model)
+
+MD14.save_results(model, "path/to/results/folder")
 ```
