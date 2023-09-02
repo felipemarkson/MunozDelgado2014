@@ -196,12 +196,14 @@ function build_model(path2main, optimizer; is_direct=false)
     # )
 
     # This fixes the voltage of the substation nodes.
-    for s = Ωˢˢ, t = T, b = B, h = Sᴿᵂ
-        JuMP.fix(vₛₜᵦₕ[s, t, b, h], Vˢˢ; force=true)
-    end
-    # JuMP.@constraint(model, eq7_aux[s=Ωˢˢ,t=T,b=B],
-    #     vₛₜᵦ[s,t,b] == Vˢˢ
-    # )
+    # for s = Ωˢˢ, t = T, b = B, h = Sᴿᵂ
+    #     JuMP.fix(vₛₜᵦₕ[s, t, b, h], Vˢˢ; force=true)
+    # end
+
+    # This makes voltage == Vˢˢ if the node has trasnformer.
+    JuMP.@constraint(model, eq7_aux[s=Ωˢˢ,t=T,b=B,h=Sᴿᵂ],
+        vₛₜᵦₕ[s,t,b,h] ==  Vˢˢ * sum(sum(yᵗʳₛₖₜ[tr, s, k, t] for k in Kᵗʳ[tr]) for tr in TR)
+    )
 
     JuMP.@constraint(model, eq8[l=L, r=Ωᴺ, s=Ωˡₛ[l][r], k=Kˡ[l], t=T, b=B, h=Sᴿᵂ],
         fˡₛᵣₖₜᵦₕ[l, s, r, k, t, b, h] ≤ yˡₛᵣₖₜ[l, s, r, k, t] * F̅ˡₖ[l][k]
