@@ -11,9 +11,12 @@ using Crayons
 #     println("]")
 # end
 function build_model(path2main, optimizer; is_direct=false)
-
-
     include(path2main * "/main.jl")
+    Base.invokelatest(_build_model_inner, optimizer; is_direct)
+end
+
+function _build_model_inner(optimizer; is_direct=false)
+
     if is_direct
         model = JuMP.direct_model(optimizer())
     else

@@ -9,4 +9,4 @@ path2main = "dados/54bus_1stage"
 model = MD14.build_model(path2main, optimizer; is_direct=true)
 optimize!(model)
 
-MD14.save_results(model, "54bus_1stage")
+MD14.save_results(path2main, model, "54bus_1stage")

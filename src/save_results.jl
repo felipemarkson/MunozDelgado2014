@@ -1,7 +1,13 @@
 import Dates
 import JuMP
 
-function save_results(mdl, name)
+
+function save_results(path2main, mdl, name)
+    include(path2main * "/main.jl")
+    Base.invokelatest(_save_results_inner, mdl, name)
+end
+
+function _save_results_inner(mdl, name)
     function values(m, symbol)
         return JuMP.value.(m[symbol])
     end

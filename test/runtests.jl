@@ -42,8 +42,8 @@ function test_investiment(model)
     end
 end
 
-function test_save_results(model, name)
-    MD14.save_results(model, name)
+function test_save_results(path2main, model, name)
+    MD14.save_results(path2main, model, name)
 end
 
 function runtest()
@@ -62,8 +62,8 @@ function runtest()
             model = test_primal(systems[sys]; run=run)
             model2 = test_primal_direct(systems[sys]; run=run)
             if run
-                test_save_results(model, sys)
-                test_save_results(model2, sys)
+                test_save_results(systems[sys], model, sys)
+                test_save_results(systems[sys], model2, sys)
                 test_investiment(model)
             end
         end

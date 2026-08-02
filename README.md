@@ -28,5 +28,5 @@ path = "path/to/data/folder" # See the folder "dados"
 model = MD14.build_model(path, optimizer; is_direct=true)
 optimize!(model)
 
-MD14.save_results(model, "path/to/results/folder")
+MD14.save_results(path2main, model, "path/to/results/folder")
 ```
